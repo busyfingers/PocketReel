@@ -1,14 +1,62 @@
 <ion-view view-title="Check In">
 
     <ion-content class="padding">
-                
+
+        <!--
+        <label class="item item-input">
+            <span class="input-label">Title</span>
+        </label>    
+        -->
+
+        <label class="item item-input">
+            <i class="icon ion-search placeholder-icon"></i>
+            <input type="search" ng-model="searchText" placeholder="Title"> <!-- ng-change="queryChange(query)"> -->
+        </label>
         <div class="padding">
-            <button class="button icon-left ion-ios-search-strong button-positive">Search title</button>
+            <button class="button button-block button-positive" ng-click="searchTitle(searchText)">Search</button>
         </div>
+
+        <!-- {{ movieResults }} -->
+
+        <ul ng-repeat="res in searchResults">
+            <div class="list card">
+
+            <div class="item item-avatar item-text-wrap">
+                <h1>{{ res.title }}</h1>
+                <h2>{{ res._year_data }} {{ res.runtime }} {{ res.rated }}</h2>
+            </div>
+
+            <div class="item item-body">
+                <img class="full-image" src="{{ res.poster }}">
+                <p>
+                {{ res.plot }}
+                </p>
+            </div>
+
+            </div>
+        </ul>
+
+        <!-- <ul ng-show="query"> -->
+            <!--
+        <li ng-repeat="res in searchResults">
+            <div class="card">
+                <div class="item item-divider">
+                    {{ res.title }} ({{ res._year_data }})
+                </div>
+                <div class="item item-text-wrap">
+                    {{ res.genres }} {{ res.runtime }}
+                </div>
+            </div>
+        </li>
+        </ul>
+    -->
+        <!--
+
      
         <div class ="padding">
             <button class="button icon-left ion-ios-checkmark button-positive">Check In</button>
         </div>
+        -->
 
     </ion-content>
 

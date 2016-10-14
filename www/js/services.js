@@ -1,4 +1,53 @@
-angular.module('starter.services', [])
+angular.module('pocketreel.services', [])
+
+.factory('UtilService', function ($ionicLoading) {
+    /**
+   * @function displayLoading
+   * @memberOf pocketreel.services.UtilService
+   * @description Displays a loading animation.
+   */
+  var displayLoading = function () {
+      $ionicLoading.show({
+          animation: 'fade-in',
+          showBackdrop: true,
+          maxWidth: 200,
+          showDelay: 0
+      });
+  };
+
+  /**
+   * @function hideLoading
+   * @memberOf pocketreel.services.UtilService
+   * @description Hides a loading animation currently showing.
+   */
+  var hideLoading = function () {
+      $ionicLoading.hide();
+  };
+
+  /**
+   * @function getSimplePopupOptObj
+   * @memberOf pocketreel.services.UtilService
+   * @param {string} _template - The message to be displayed
+   * @param {string} _title - The popup box title
+   * @description Returns an object that can be used as input to $ionicPopup.alert
+   */
+  var getSimplePopupOptObj = function (_template, _title) {
+      return {
+          template: _template,
+          title: _title,
+          buttons: [
+              { text: "OK", type: "button-positive" }
+          ]
+      };
+  };
+
+  return {
+    displayLoading: displayLoading,
+    hideLoading: hideLoading,
+    getSimplePopupOptObj: getSimplePopupOptObj
+  }
+
+})
 
 .factory('Chats', function() {
   // Might use a resource here that returns a JSON array
