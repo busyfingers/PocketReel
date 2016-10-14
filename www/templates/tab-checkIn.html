@@ -23,6 +23,7 @@
 
             <div class="item item-avatar item-text-wrap">
                 <h1>{{ res.title }}</h1>
+                <h2>{{ res.genres }}</h2>
                 <h2>{{ res._year_data }} | {{ res.runtime }} | {{ res.rated }}</h2>
             </div>
 
@@ -31,6 +32,10 @@
                 <p>
                 {{ res.plot }}
                 </p>
+            </div>
+
+            <div class="item item-divider" align="right">
+                <a ng-href="#/tab/checkIn/{{res}}"><button class="button button-positive">Check in</button></a>
             </div>
 
             </div>

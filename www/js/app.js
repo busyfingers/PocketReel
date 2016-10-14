@@ -57,6 +57,16 @@ angular.module('pocketreel', ['ionic', 'pocketreel.controllers', 'pocketreel.ser
       }
   })
 
+  .state('tab.checkIn-detail', {
+    url: '/checkIn/:titleToCheckIn',
+    views: {
+      'tab-checkIn': {
+        templateUrl: 'templates/checkIn-detail.html',
+        controller: 'CheckInDetailCtrl'
+      }
+    }
+  })
+
   .state('tab.chats', {
       url: '/chats',
       views: {

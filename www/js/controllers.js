@@ -33,7 +33,12 @@ angular.module('pocketreel.controllers', [])
         }
 
       }).catch(function(err) {
-        var popupOptions = UtilService.getSimplePopupOptObj("Try another search phrase", "Nothing found");
+        var popupOptions = "";
+        if (err.RequestError) {
+          popupOptions = UtilService.getSimplePopupOptObj("Check your connection or try again later", "Service not available");
+        } else {
+          popupOptions = UtilService.getSimplePopupOptObj("Try another search phrase", "Nothing found");
+        }
         UtilService.hideLoading();
         $ionicPopup.alert(popupOptions);
 
@@ -44,7 +49,17 @@ angular.module('pocketreel.controllers', [])
       
 
     //}
-  }; 
+  };
+
+  $scope.checkIn = function(titleInfo) {
+    console.log("Checkin:", titleInfo.constructor.name, titleInfo.title)
+  };
+
+
+}])
+
+.controller('CheckInDetailCtrl', ['$scope', '$stateParams', function($scope, $stateParams) {
+  $scope.titleInfo = $stateParams.titleToCheckIn;
 }])
 
 .controller('ChatsCtrl', ['$scope', 'Chats', function($scope, Chats) {
