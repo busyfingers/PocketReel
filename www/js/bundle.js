@@ -41659,7 +41659,7 @@ angular.module('pocketreel.controllers', [])
       $rootScope.searchResultDetails = [];
       $rootScope.searchText = "";
       $ionicPopup.alert(popupOptions).then(function() {
-        $state.go('tab.dash');
+        $state.go('tab.myCheckIns');
       });
     //});
 
