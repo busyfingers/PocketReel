@@ -72079,10 +72079,8 @@ angular.module('pocketreel', ['ionic', 'pocketreel.controllers', 'pocketreel.ser
           controller: 'CheckInCtrl'
         }
       }
-  })
-
-  .state('tab.checkIn-detail', {
-    url: '/checkIn/:titleToCheckIn',
+  }).state('tab.checkIn-detail', {
+    url: '/checkIn/:checkInTitleId',
     views: {
       'tab-checkIn': {
         templateUrl: 'templates/checkIn-detail.html',
@@ -72090,7 +72088,17 @@ angular.module('pocketreel', ['ionic', 'pocketreel.controllers', 'pocketreel.ser
       }
     }
   })
+  .state('tab.myCheckIns', {
+    url: 'myCheckIns',
+    views: {
+      'tab-myCheckIns': {
+        templateUrl: 'templates/tab-myCheckIns.html',
+        controller: 'MyCheckInsCtrl'
+      }
+    }
+  })
 
+  // starter biolerplate
   .state('tab.chats', {
       url: '/chats',
       views: {
@@ -72119,6 +72127,7 @@ angular.module('pocketreel', ['ionic', 'pocketreel.controllers', 'pocketreel.ser
       }
     }
   });
+  // started biolerplate
 
   // if none of the above states are matched, use this as the fallback
   $urlRouterProvider.otherwise('/tab/dash');
@@ -72134,7 +72143,7 @@ angular.module('pocketreel.controllers', [])
   $scope.dummyData = RecentActivity.getDummyRecentActivity();
 }])
 
-.controller('CheckInCtrl', ['$scope', 'UtilService', '$ionicPopup', function($scope, UtilService, $ionicPopup) {
+.controller('CheckInCtrl', ['$rootScope', '$scope', 'UtilService', '$ionicPopup', function($rootScope, $scope, UtilService, $ionicPopup) {
   //$scope.chats = Chats.all();
 
   $scope.searchTitle = function(queryText) {
@@ -72151,11 +72160,11 @@ angular.module('pocketreel.controllers', [])
           console.log(data)
           console.log(data.constructor.name)
           $scope.resultType = data.constructor.name
-          $scope.searchResults = [ data ];
+          $rootScope.searchResults = [ data ];
 
           if (data.constructor.name === "TVShow") {
             data.episodes().then(function(episodes) {
-                return $scope.searchResultDetails = [ episodes ];
+                return $rootScope.searchResultDetails = [ episodes ];
             });
           }
         }
@@ -72170,8 +72179,8 @@ angular.module('pocketreel.controllers', [])
         UtilService.hideLoading();
         $ionicPopup.alert(popupOptions);
 
-        $scope.searchResults = "";
-        $scope.searchResultDetails = "";
+        $rootScope.searchResults = "";
+        $rootScope.searchResultDetails = "";
         console.log("ERR: ", err)
       });
       
@@ -72186,10 +72195,35 @@ angular.module('pocketreel.controllers', [])
 
 }])
 
-.controller('CheckInDetailCtrl', ['$scope', '$stateParams', function($scope, $stateParams) {
-  $scope.titleInfo = $stateParams.titleToCheckIn;
+.controller('CheckInDetailCtrl', ['$scope', '$rootScope', '$stateParams', '$ionicPopup', 'UtilService', 'DataService', '$state',
+  function($scope, $rootScope, $stateParams, $ionicPopup, UtilService, DataService, $state) {
+  $scope.userScore = 50;
+  for (index in $rootScope.searchResults) {
+    if ($rootScope.searchResults[index].imdbid === $stateParams.checkInTitleId)
+      $scope.titleInfo = $rootScope.searchResults[index];
+  }
+
+  $scope.confirmCheckIn = function() {
+
+    // TODO: save data to some DB via service. Maybe display a new view that confirms the check-in and also shows badges, if there are any?
+    DataService.saveCheckIn({
+      "title": $scope.titleInfo,
+      "score": $scope.userScore,
+      "time:": UtilService.getDateString()
+    });
+    var msg = `Gave title ${$scope.titleInfo.title} a score of ${$scope.userScore}`;
+    console.log(msg);
+    var popupOptions = UtilService.getSimplePopupOptObj(msg, "Check-in complete!");
+    $ionicPopup.alert(popupOptions).then(function() { $state.go('tab.checkIn') });
+  };
+
 }])
 
+.controller('MyCheckInsCtrl', ['$window', 'DataService', function($window, DataService) {
+  $scope.myCheckedInItems = DataService.getCheckedInItems();
+}])
+
+// starter biolerplate
 .controller('ChatsCtrl', ['$scope', 'Chats', function($scope, Chats) {
   // With the new view caching in Ionic, Controllers are only called
   // when they are recreated or on app start, instead of every page change.
@@ -72213,10 +72247,39 @@ angular.module('pocketreel.controllers', [])
   $scope.settings = {
     enableFriends: true
   };
+//starter biolerplate
+
 }]);
 
 },{"imdb-api":257}],409:[function(require,module,exports){
 angular.module('pocketreel.services', [])
+
+.factory('DataService', function($window) {
+  var saveCheckIn = function(itemToCheckIn) {
+    var checkedInItems = $window.localStorage.getItem("CHECKED_IN_TITLES");
+
+    if (checkedInItems === "null" || checkedInItems === null) {
+      $window.localStorage.removeItem("CHECKED_IN_TITLES");
+      checkedInItems = [];
+    }
+
+    console.log(itemToCheckIn)
+    console.log(typeof(itemToCheckIn))
+    console.log(typeof(checkedInItems))
+    console.log(checkedInItems)
+    checkedInItems.push(itemToCheckIn);
+    $window.localStorage.setItem("CHECKED_IN_TITLES", checkedInItems);
+  };
+
+  var getCheckedInItems = function() { // TODO: take param for user
+    return $window.localStorage.getItem("CHECKED_IN_TITLES") || [];
+  };
+
+  return {
+    saveCheckIn: saveCheckIn,
+    getCheckedInItems: getCheckedInItems
+  };
+})
 
 .factory('UtilService', function ($ionicLoading) {
     /**
@@ -72259,10 +72322,17 @@ angular.module('pocketreel.services', [])
       };
   };
 
+  var getDateString = function() {
+    var time = new Date().getTime();
+    var datestr = new Date(time).toISOString().replace(/T/, ' ').replace(/Z/, '');
+    return datestr;
+  }
+
   return {
     displayLoading: displayLoading,
     hideLoading: hideLoading,
-    getSimplePopupOptObj: getSimplePopupOptObj
+    getSimplePopupOptObj: getSimplePopupOptObj,
+    getDateString: getDateString
   }
 
 })

@@ -1,7 +1,25 @@
 <ion-view view-title="Confirm check-in">
 
     <ion-content class="padding">
-        {{ titleInfo.title }}
+        <div class="card">
+            <div class="item item-text-wrap">
+                <h1>{{ titleInfo.title }}</h1>
+                <h2>IMDb rating: {{ titleInfo.rating }}</h2>
+                <h2>Metascore: {{ titleInfo.metascore }}</h2>
+                <br>
+                <h2><b>Your rating: {{ userScore }}</b></h2>
+                <div class="item range">
+                    <i class="icon ion-sad-outline"></i>
+                    <input type="range" name="volume" min="0" max="100" value="0" ng-model="userScore">
+                    <i class="icon ion-happy-outline"></i>               
+                </div>
+                
+                <button class="button button-block button-positive" ng-click="confirmCheckIn()">OK</button>
+
+            </div>
+        </div>
+
+        
     </ion-content>
 
 </ion-view>

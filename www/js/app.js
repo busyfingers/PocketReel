@@ -55,10 +55,8 @@ angular.module('pocketreel', ['ionic', 'pocketreel.controllers', 'pocketreel.ser
           controller: 'CheckInCtrl'
         }
       }
-  })
-
-  .state('tab.checkIn-detail', {
-    url: '/checkIn/:titleToCheckIn',
+  }).state('tab.checkIn-detail', {
+    url: '/checkIn/:checkInTitleId',
     views: {
       'tab-checkIn': {
         templateUrl: 'templates/checkIn-detail.html',
@@ -66,7 +64,17 @@ angular.module('pocketreel', ['ionic', 'pocketreel.controllers', 'pocketreel.ser
       }
     }
   })
+  .state('tab.myCheckIns', {
+    url: 'myCheckIns',
+    views: {
+      'tab-myCheckIns': {
+        templateUrl: 'templates/tab-myCheckIns.html',
+        controller: 'MyCheckInsCtrl'
+      }
+    }
+  })
 
+  // starter biolerplate
   .state('tab.chats', {
       url: '/chats',
       views: {
@@ -95,6 +103,7 @@ angular.module('pocketreel', ['ionic', 'pocketreel.controllers', 'pocketreel.ser
       }
     }
   });
+  // started biolerplate
 
   // if none of the above states are matched, use this as the fallback
   $urlRouterProvider.otherwise('/tab/dash');

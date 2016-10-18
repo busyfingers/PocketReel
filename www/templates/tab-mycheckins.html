@@ -2,6 +2,19 @@
 
     <ion-content class="padding">
 
+        <ul>
+        <li ng-repeat="item in checkedInItems">
+            <div class="card">
+                <div class="item item-divider">
+                    {{ item.title }}
+                </div>
+                <div class="item item-text-wrap">
+                    Rated {{ item.userScore }} at {{ item.time }}
+                </div>
+                </div>
+            </li>
+        </ul>
+
     </ion-content>
 
 </ion-view>

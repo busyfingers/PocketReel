@@ -1,5 +1,33 @@
 angular.module('pocketreel.services', [])
 
+.factory('DataService', function($window) {
+  var saveCheckIn = function(itemToCheckIn) {
+    // TODO: stringify JSON on save and parse on load
+    var checkedInItems = $window.localStorage.getItem("CHECKED_IN_TITLES");
+
+    if (checkedInItems === "null" || checkedInItems === null) {
+      $window.localStorage.removeItem("CHECKED_IN_TITLES");
+      checkedInItems = [];
+    }
+
+    console.log(itemToCheckIn)
+    console.log(typeof(itemToCheckIn))
+    console.log(typeof(checkedInItems))
+    console.log(checkedInItems)
+    checkedInItems.push(itemToCheckIn);
+    $window.localStorage.setItem("CHECKED_IN_TITLES", checkedInItems);
+  };
+
+  var getCheckedInItems = function() { // TODO: take param for user
+    return $window.localStorage.getItem("CHECKED_IN_TITLES") || [];
+  };
+
+  return {
+    saveCheckIn: saveCheckIn,
+    getCheckedInItems: getCheckedInItems
+  };
+})
+
 .factory('UtilService', function ($ionicLoading) {
     /**
    * @function displayLoading
@@ -41,10 +69,17 @@ angular.module('pocketreel.services', [])
       };
   };
 
+  var getDateString = function() {
+    var time = new Date().getTime();
+    var datestr = new Date(time).toISOString().replace(/T/, ' ').replace(/Z/, '');
+    return datestr;
+  }
+
   return {
     displayLoading: displayLoading,
     hideLoading: hideLoading,
-    getSimplePopupOptObj: getSimplePopupOptObj
+    getSimplePopupOptObj: getSimplePopupOptObj,
+    getDateString: getDateString
   }
 
 })
