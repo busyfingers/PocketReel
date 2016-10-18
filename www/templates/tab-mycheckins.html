@@ -1,14 +1,13 @@
 <ion-view view-title="My check-ins">
 
 	<ion-content class="padding">
-
 		<h3>My checked in titles</h3>
 		<ul ng-repeat="item in myCheckedInItems">
-            <a class="item item-text-wrap item-thumbnail-left" href="{{ item.imdburl }}">
-            <img src="{{ item.poster }}">
+            <div class="item item-text-wrap item-thumbnail-left" href="{{ item.imdburl }}" target="_system" ng-click="openLink(item.imdburl)">
+            <img ng-src="{{ item.poster }}">
             <h2>{{ item.title }}</h2>
             <p>Rated {{ item.userScore }} at {{ item.time }}</p>
-            </a>
+            </div>
             <!--
 			<div class="list card">
                 <a href="#" class="item">

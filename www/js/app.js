@@ -32,7 +32,7 @@ angular.module('pocketreel', ['ionic', 'pocketreel.controllers', 'pocketreel.ser
     .state('tab', {
     url: '/tab',
     abstract: true,
-    templateUrl: 'templates/tabs.html'
+    templateUrl: './templates/tabs.html'
   })
 
   // Each tab has its own nav history stack:
@@ -41,7 +41,7 @@ angular.module('pocketreel', ['ionic', 'pocketreel.controllers', 'pocketreel.ser
     url: '/dash',
     views: {
       'tab-dash': {
-        templateUrl: 'templates/tab-dash.html',
+        templateUrl: './templates/tab-dash.html',
         controller: 'DashCtrl'
       }
     }
@@ -51,7 +51,7 @@ angular.module('pocketreel', ['ionic', 'pocketreel.controllers', 'pocketreel.ser
       url: '/checkIn',
       views: {
         'tab-checkIn': {
-          templateUrl: 'templates/tab-checkIn.html',
+          templateUrl: './templates/tab-checkIn.html',
           controller: 'CheckInCtrl'
         }
       }
@@ -59,7 +59,7 @@ angular.module('pocketreel', ['ionic', 'pocketreel.controllers', 'pocketreel.ser
     url: '/checkIn/:checkInTitleId',
     views: {
       'tab-checkIn': {
-        templateUrl: 'templates/checkIn-detail.html',
+        templateUrl: './templates/checkIn-detail.html',
         controller: 'CheckInDetailCtrl'
       }
     }
@@ -69,13 +69,14 @@ angular.module('pocketreel', ['ionic', 'pocketreel.controllers', 'pocketreel.ser
     cache: false,
     views: {
       'tab-myCheckIns': {
-        templateUrl: 'templates/tab-myCheckIns.html',
+        templateUrl: './templates/tab-myCheckIns.html',
         controller: 'MyCheckInsCtrl'
       }
     }
   })
 
   // starter biolerplate
+  /*
   .state('tab.chats', {
       url: '/chats',
       views: {
@@ -104,6 +105,7 @@ angular.module('pocketreel', ['ionic', 'pocketreel.controllers', 'pocketreel.ser
       }
     }
   });
+  */
   // started biolerplate
 
   // if none of the above states are matched, use this as the fallback

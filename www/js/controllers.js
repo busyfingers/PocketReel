@@ -69,7 +69,7 @@ angular.module('pocketreel.controllers', [])
       $rootScope.searchResultDetails = [];
       $rootScope.searchText = "";
       $ionicPopup.alert(popupOptions).then(function() {
-        $state.go('tab.checkIn');
+        $state.go('tab.dash');
       });
     //});
 
@@ -79,6 +79,11 @@ angular.module('pocketreel.controllers', [])
 
 .controller('MyCheckInsCtrl', ['$scope', '$window', 'DataService', function($scope, $window, DataService) {
   $scope.myCheckedInItems = DataService.getCheckedInItems();
+
+  $scope.openLink = function(url) {
+    window.open(url, '_system', 'location=yes');
+  };
+
 }])
 
 // starter biolerplate
