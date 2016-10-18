@@ -65,7 +65,8 @@ angular.module('pocketreel', ['ionic', 'pocketreel.controllers', 'pocketreel.ser
     }
   })
   .state('tab.myCheckIns', {
-    url: 'myCheckIns',
+    url: '/myCheckIns',
+    cache: false,
     views: {
       'tab-myCheckIns': {
         templateUrl: 'templates/tab-myCheckIns.html',

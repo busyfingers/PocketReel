@@ -1,20 +1,28 @@
 <ion-view view-title="My check-ins">
 
-    <ion-content class="padding">
+	<ion-content class="padding">
 
-        <ul>
-        <li ng-repeat="item in checkedInItems">
-            <div class="card">
-                <div class="item item-divider">
-                    {{ item.title }}
-                </div>
-                <div class="item item-text-wrap">
-                    Rated {{ item.userScore }} at {{ item.time }}
-                </div>
-                </div>
-            </li>
-        </ul>
+		<h3>My checked in titles</h3>
+		<ul ng-repeat="item in myCheckedInItems">
+            <a class="item item-text-wrap item-thumbnail-left" href="{{ item.imdburl }}">
+            <img src="{{ item.poster }}">
+            <h2>{{ item.title }}</h2>
+            <p>Rated {{ item.userScore }} at {{ item.time }}</p>
+            </a>
+            <!--
+			<div class="list card">
+                <a href="#" class="item">
+				<div class="item item-text-wrap">
+					{{ item.title }}
+				</div>
+                </a>
+				<div class="item item-text-wrap">
+					Rated {{ item.userScore }} at {{ item.time }}
+				</div>
+			</div>
+            -->
+		</ul>
 
-    </ion-content>
+	</ion-content>
 
 </ion-view>

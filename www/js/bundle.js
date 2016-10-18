@@ -72089,7 +72089,8 @@ angular.module('pocketreel', ['ionic', 'pocketreel.controllers', 'pocketreel.ser
     }
   })
   .state('tab.myCheckIns', {
-    url: 'myCheckIns',
+    url: '/myCheckIns',
+    cache: false,
     views: {
       'tab-myCheckIns': {
         templateUrl: 'templates/tab-myCheckIns.html',
@@ -72141,15 +72142,12 @@ angular.module('pocketreel.controllers', [])
 
 .controller('DashCtrl', ['$scope', 'RecentActivity', function($scope, RecentActivity) {
   $scope.dummyData = RecentActivity.getDummyRecentActivity();
+  console.log(new Date().getTimezoneOffset())
 }])
 
 .controller('CheckInCtrl', ['$rootScope', '$scope', 'UtilService', '$ionicPopup', function($rootScope, $scope, UtilService, $ionicPopup) {
-  //$scope.chats = Chats.all();
 
   $scope.searchTitle = function(queryText) {
-
-    //if (queryText.length >= 3 && (new Date().getTime()-$scope.lastSearchAt >= 500 || !$scope.lastSearchAt)) {
-      //console.log("ok", "len: " + queryText.length, "lastsearch: " + $scope.lastSearchAt)
       $scope.lastSearchAt = new Date().getTime();
 
       UtilService.displayLoading();
@@ -72171,8 +72169,8 @@ angular.module('pocketreel.controllers', [])
 
       }).catch(function(err) {
         var popupOptions = "";
-        if (err.RequestError) {
-          popupOptions = UtilService.getSimplePopupOptObj("Check your connection or try again later", "Service not available");
+        if (err.constructor.name === "ImdbError") {
+          popupOptions = UtilService.getSimplePopupOptObj("Try again later", "IMDb API error");
         } else {
           popupOptions = UtilService.getSimplePopupOptObj("Try another search phrase", "Nothing found");
         }
@@ -72182,10 +72180,7 @@ angular.module('pocketreel.controllers', [])
         $rootScope.searchResults = "";
         $rootScope.searchResultDetails = "";
         console.log("ERR: ", err)
-      });
-      
-
-    //}
+      });      
   };
 
   $scope.checkIn = function(titleInfo) {
@@ -72203,23 +72198,32 @@ angular.module('pocketreel.controllers', [])
       $scope.titleInfo = $rootScope.searchResults[index];
   }
 
-  $scope.confirmCheckIn = function() {
-
+  $scope.confirmCheckIn = function(userScore) {
     // TODO: save data to some DB via service. Maybe display a new view that confirms the check-in and also shows badges, if there are any?
     DataService.saveCheckIn({
-      "title": $scope.titleInfo,
-      "score": $scope.userScore,
-      "time:": UtilService.getDateString()
-    });
-    var msg = `Gave title ${$scope.titleInfo.title} a score of ${$scope.userScore}`;
-    console.log(msg);
-    var popupOptions = UtilService.getSimplePopupOptObj(msg, "Check-in complete!");
-    $ionicPopup.alert(popupOptions).then(function() { $state.go('tab.checkIn') });
+      "imdbid": $scope.titleInfo.imdbid,
+      "title": $scope.titleInfo.title,
+      "poster": $scope.titleInfo.poster,
+      "imdburl": $scope.titleInfo.imdburl,
+      "userScore": userScore,
+      "time": UtilService.getDateString()
+    })
+    // .then(function () {
+      var msg = `You gave title ${$scope.titleInfo.title} a score of ${userScore}`;
+      var popupOptions = UtilService.getSimplePopupOptObj(msg, "Check-in complete!");
+      $rootScope.searchResults = [];
+      $rootScope.searchResultDetails = [];
+      $rootScope.searchText = "";
+      $ionicPopup.alert(popupOptions).then(function() {
+        $state.go('tab.checkIn');
+      });
+    //});
+
   };
 
 }])
 
-.controller('MyCheckInsCtrl', ['$window', 'DataService', function($window, DataService) {
+.controller('MyCheckInsCtrl', ['$scope', '$window', 'DataService', function($scope, $window, DataService) {
   $scope.myCheckedInItems = DataService.getCheckedInItems();
 }])
 
@@ -72255,24 +72259,17 @@ angular.module('pocketreel.controllers', [])
 angular.module('pocketreel.services', [])
 
 .factory('DataService', function($window) {
+
+  //$window.localStorage.removeItem("CHECKED_IN_TITLES")
+
   var saveCheckIn = function(itemToCheckIn) {
-    var checkedInItems = $window.localStorage.getItem("CHECKED_IN_TITLES");
-
-    if (checkedInItems === "null" || checkedInItems === null) {
-      $window.localStorage.removeItem("CHECKED_IN_TITLES");
-      checkedInItems = [];
-    }
-
-    console.log(itemToCheckIn)
-    console.log(typeof(itemToCheckIn))
-    console.log(typeof(checkedInItems))
-    console.log(checkedInItems)
-    checkedInItems.push(itemToCheckIn);
-    $window.localStorage.setItem("CHECKED_IN_TITLES", checkedInItems);
+    var checkedInItems = JSON.parse($window.localStorage.getItem("CHECKED_IN_TITLES")) || JSON.parse("{}");
+    checkedInItems[itemToCheckIn.imdbid] = itemToCheckIn;
+    $window.localStorage.setItem("CHECKED_IN_TITLES", JSON.stringify(checkedInItems));
   };
 
   var getCheckedInItems = function() { // TODO: take param for user
-    return $window.localStorage.getItem("CHECKED_IN_TITLES") || [];
+    return JSON.parse($window.localStorage.getItem("CHECKED_IN_TITLES")) || JSON.parse("{}");
   };
 
   return {
@@ -72323,7 +72320,8 @@ angular.module('pocketreel.services', [])
   };
 
   var getDateString = function() {
-    var time = new Date().getTime();
+    var d = new Date();
+    var time = d.getTime()-d.getTimezoneOffset()*60000; // offset in minutes, convert to milliseconds
     var datestr = new Date(time).toISOString().replace(/T/, ' ').replace(/Z/, '');
     return datestr;
   }

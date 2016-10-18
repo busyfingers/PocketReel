@@ -7,12 +7,8 @@ angular.module('pocketreel.controllers', [])
 }])
 
 .controller('CheckInCtrl', ['$rootScope', '$scope', 'UtilService', '$ionicPopup', function($rootScope, $scope, UtilService, $ionicPopup) {
-  //$scope.chats = Chats.all();
 
   $scope.searchTitle = function(queryText) {
-
-    //if (queryText.length >= 3 && (new Date().getTime()-$scope.lastSearchAt >= 500 || !$scope.lastSearchAt)) {
-      //console.log("ok", "len: " + queryText.length, "lastsearch: " + $scope.lastSearchAt)
       $scope.lastSearchAt = new Date().getTime();
 
       UtilService.displayLoading();
@@ -20,8 +16,6 @@ angular.module('pocketreel.controllers', [])
       imdb.getReq({ name: queryText }).then(function(data) {
         if (data) {
           UtilService.hideLoading();
-          console.log(data)
-          console.log(data.constructor.name)
           $scope.resultType = data.constructor.name
           $rootScope.searchResults = [ data ];
 
@@ -34,8 +28,8 @@ angular.module('pocketreel.controllers', [])
 
       }).catch(function(err) {
         var popupOptions = "";
-        if (err.RequestError) {
-          popupOptions = UtilService.getSimplePopupOptObj("Check your connection or try again later", "Service not available");
+        if (err.constructor.name === "ImdbError") {
+          popupOptions = UtilService.getSimplePopupOptObj("Try again later", "IMDb API error");
         } else {
           popupOptions = UtilService.getSimplePopupOptObj("Try another search phrase", "Nothing found");
         }
@@ -45,16 +39,8 @@ angular.module('pocketreel.controllers', [])
         $rootScope.searchResults = "";
         $rootScope.searchResultDetails = "";
         console.log("ERR: ", err)
-      });
-      
-
-    //}
+      });      
   };
-
-  $scope.checkIn = function(titleInfo) {
-    console.log("Checkin:", titleInfo.constructor.name, titleInfo.title)
-  };
-
 
 }])
 
@@ -66,23 +52,32 @@ angular.module('pocketreel.controllers', [])
       $scope.titleInfo = $rootScope.searchResults[index];
   }
 
-  $scope.confirmCheckIn = function() {
-
+  $scope.confirmCheckIn = function(userScore) {
     // TODO: save data to some DB via service. Maybe display a new view that confirms the check-in and also shows badges, if there are any?
     DataService.saveCheckIn({
-      "title": $scope.titleInfo,
-      "score": $scope.userScore,
-      "time:": UtilService.getDateString()
-    });
-    var msg = `Gave title ${$scope.titleInfo.title} a score of ${$scope.userScore}`;
-    console.log(msg);
-    var popupOptions = UtilService.getSimplePopupOptObj(msg, "Check-in complete!");
-    $ionicPopup.alert(popupOptions).then(function() { $state.go('tab.checkIn') });
+      "imdbid": $scope.titleInfo.imdbid,
+      "title": $scope.titleInfo.title,
+      "poster": $scope.titleInfo.poster,
+      "imdburl": $scope.titleInfo.imdburl,
+      "userScore": userScore,
+      "time": UtilService.getDateString()
+    })
+    // .then(function () {
+      var msg = `You gave title ${$scope.titleInfo.title} a score of ${userScore}`;
+      var popupOptions = UtilService.getSimplePopupOptObj(msg, "Check-in complete!");
+      $rootScope.searchResults = [];
+      $rootScope.searchResultDetails = [];
+      $rootScope.searchText = "";
+      $ionicPopup.alert(popupOptions).then(function() {
+        $state.go('tab.checkIn');
+      });
+    //});
+
   };
 
 }])
 
-.controller('MyCheckInsCtrl', ['$window', 'DataService', function($window, DataService) {
+.controller('MyCheckInsCtrl', ['$scope', '$window', 'DataService', function($scope, $window, DataService) {
   $scope.myCheckedInItems = DataService.getCheckedInItems();
 }])
 

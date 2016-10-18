@@ -10,11 +10,11 @@
                 <h2><b>Your rating: {{ userScore }}</b></h2>
                 <div class="item range">
                     <i class="icon ion-sad-outline"></i>
-                    <input type="range" name="volume" min="0" max="100" value="0" ng-model="userScore">
+                    <input type="range" name="volume" min="0" max="100" ng-model="userScore">
                     <i class="icon ion-happy-outline"></i>               
                 </div>
                 
-                <button class="button button-block button-positive" ng-click="confirmCheckIn()">OK</button>
+                <button class="button button-block button-positive" ng-click="confirmCheckIn(userScore)">OK</button>
 
             </div>
         </div>

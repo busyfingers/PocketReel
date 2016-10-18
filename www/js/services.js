@@ -1,25 +1,17 @@
 angular.module('pocketreel.services', [])
 
 .factory('DataService', function($window) {
+
+  //$window.localStorage.removeItem("CHECKED_IN_TITLES")
+
   var saveCheckIn = function(itemToCheckIn) {
-    // TODO: stringify JSON on save and parse on load
-    var checkedInItems = $window.localStorage.getItem("CHECKED_IN_TITLES");
-
-    if (checkedInItems === "null" || checkedInItems === null) {
-      $window.localStorage.removeItem("CHECKED_IN_TITLES");
-      checkedInItems = [];
-    }
-
-    console.log(itemToCheckIn)
-    console.log(typeof(itemToCheckIn))
-    console.log(typeof(checkedInItems))
-    console.log(checkedInItems)
-    checkedInItems.push(itemToCheckIn);
-    $window.localStorage.setItem("CHECKED_IN_TITLES", checkedInItems);
+    var checkedInItems = JSON.parse($window.localStorage.getItem("CHECKED_IN_TITLES")) || JSON.parse("{}");
+    checkedInItems[itemToCheckIn.imdbid] = itemToCheckIn;
+    $window.localStorage.setItem("CHECKED_IN_TITLES", JSON.stringify(checkedInItems));
   };
 
   var getCheckedInItems = function() { // TODO: take param for user
-    return $window.localStorage.getItem("CHECKED_IN_TITLES") || [];
+    return JSON.parse($window.localStorage.getItem("CHECKED_IN_TITLES")) || JSON.parse("{}");
   };
 
   return {
@@ -70,7 +62,8 @@ angular.module('pocketreel.services', [])
   };
 
   var getDateString = function() {
-    var time = new Date().getTime();
+    var d = new Date();
+    var time = d.getTime()-d.getTimezoneOffset()*60000; // offset in minutes, convert to milliseconds
     var datestr = new Date(time).toISOString().replace(/T/, ' ').replace(/Z/, '');
     return datestr;
   }
