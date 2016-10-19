@@ -12,9 +12,21 @@
             <i class="icon ion-search placeholder-icon"></i>
             <input type="search" ng-model="searchText" placeholder="Title"> <!-- ng-change="queryChange(query)"> -->
         </label>
+
+        <div class="row"> 
+            <div class="col col-50">
+                <button class="button button-block button-positive" ng-click="clearInput()">Clear</button>
+            </div>
+            <div class="col col-50">
+                <button class="button button-block button-positive" ng-click="searchTitle(searchText)">Search</button>
+            </div>
+        </div>
+
+        <!--
         <div class="padding">
             <button class="button button-block button-positive" ng-click="searchTitle(searchText)">Search</button>
         </div>
+        -->
 
         <!-- {{ movieResults }} -->
 

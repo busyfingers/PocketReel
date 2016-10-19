@@ -42,6 +42,10 @@ angular.module('pocketreel.controllers', [])
       });      
   };
 
+  $scope.clearInput = function() {
+    $scope.searchText = "";
+  };
+
 }])
 
 .controller('CheckInDetailCtrl', ['$scope', '$rootScope', '$stateParams', '$ionicPopup', 'UtilService', 'DataService', '$state',
