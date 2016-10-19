@@ -72151,8 +72151,6 @@ angular.module('pocketreel.controllers', [])
   $scope.searchTitle = function(queryText) {
       $scope.lastSearchAt = new Date().getTime();
 
-      console.log($scope.search.searchText)
-
       UtilService.displayLoading();
     
       imdb.getReq({ name: queryText }).then(function(data) {
@@ -72185,8 +72183,7 @@ angular.module('pocketreel.controllers', [])
   };
 
   $scope.clearInput = function() {
-    console.log($scope.search.searchText)
-    $scope.search.searchText = "";
+    $scope.searchText = "";
   };
 
 }])
