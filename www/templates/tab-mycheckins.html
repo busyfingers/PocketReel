@@ -1,7 +1,12 @@
 <ion-view view-title="My check-ins">
-
 	<ion-content class="padding">
-		<h3>My checked in titles</h3>
+
+		<h4>Check-ins</h4>
+
+		<div ng-if="showPlaceHolder()">
+			<p>No check-ins yet!</p>
+		</div>
+
 		<ul ng-repeat="item in myCheckedInItems">
             <div class="item item-text-wrap item-thumbnail-left" href="{{ item.imdburl }}" target="_system" ng-click="openLink(item.imdburl)">
             <img ng-src="{{ item.poster }}">
@@ -21,7 +26,15 @@
 			</div>
             -->
 		</ul>
+		<br>
+		<ul>
+			<a class="item item-icon-left item-icon-right" href="#/tab/myCheckIns/myBadges">
+				<i class="icon ion-ribbon-b"></i>
+				Badges
+				<i class="icon ion-ios-arrow-forward"></i>
+			</a>
+		</ul>
+		<br>
 
 	</ion-content>
-
 </ion-view>

@@ -10,15 +10,15 @@
 
         <label class="item item-input">
             <i class="icon ion-search placeholder-icon"></i>
-            <input type="search" ng-model="searchText" placeholder="Title"> <!-- ng-change="queryChange(query)"> -->
+            <input type="search" ng-model="searchParams.searchText" placeholder="Title"> <!-- ng-change="queryChange(query)"> -->
         </label>
 
         <div class="row"> 
             <div class="col col-50">
-                <button class="button button-block button-positive" ng-click="clearInput()">Clear</button>
+                <button class="button button-block button-calm" ng-click="clearInput()">Clear</button>
             </div>
             <div class="col col-50">
-                <button class="button button-block button-positive" ng-click="searchTitle(searchText)">Search</button>
+                <button class="button button-block button-calm" ng-click="searchTitle()">Search</button>
             </div>
         </div>
 
@@ -47,7 +47,7 @@
             </div>
 
             <div class="item item-divider" align="right">
-                <a href="#/tab/checkIn/{{res.imdbid}}"><button class="button button-positive">Check in</button></a>
+                <a href="#/tab/checkIn/{{res.imdbid}}"><button class="button button-calm" ng-click="clearInput()">Check in</button></a>
             </div>
 
             </div>

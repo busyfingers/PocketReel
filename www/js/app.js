@@ -73,6 +73,15 @@ angular.module('pocketreel', ['ionic', 'pocketreel.controllers', 'pocketreel.ser
         controller: 'MyCheckInsCtrl'
       }
     }
+  }).state('tab.myBadges', {
+    url: '/myCheckIns/myBadges',
+    cache: false,
+    views: {
+      'tab-myCheckIns': {
+        templateUrl: './templates/tab-myBadges.html',
+        controller: 'MyBadgesCtrl'
+      }
+    }
   })
 
   // starter biolerplate
