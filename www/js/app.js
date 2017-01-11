@@ -28,14 +28,37 @@ angular.module('pocketreel', ['ionic', 'pocketreel.controllers', 'pocketreel.ser
   // Each state's controller can be found in controllers.js
   $stateProvider
 
-  // setup an abstract state for the tabs directive
-    .state('tab', {
+  // Authentication views
+  .state('auth', {
+        url: "/auth",
+        abstract: true,
+        templateUrl: "templates/auth.html"
+    })
+    .state('auth.signin', {
+        url: '/signin',
+        views: {
+            'auth-signin': {
+                templateUrl: 'templates/auth-signin.html',
+                controller: 'SignInCtrl'
+            }
+        }
+    })
+    .state('auth.signup', {
+        url: '/signup',
+        views: {
+            'auth-signup': {
+                templateUrl: 'templates/auth-signup.html',
+                controller: 'SignUpCtrl'
+            }
+        }
+    })
+
+  // App views/tabs
+  .state('tab', {
     url: '/tab',
     abstract: true,
     templateUrl: './templates/tabs.html'
   })
-
-  // Each tab has its own nav history stack:
 
   .state('tab.dash', {
     url: '/dash',
@@ -64,6 +87,7 @@ angular.module('pocketreel', ['ionic', 'pocketreel.controllers', 'pocketreel.ser
       }
     }
   })
+
   .state('tab.myCheckIns', {
     url: '/myCheckIns',
     cache: false,
@@ -83,6 +107,17 @@ angular.module('pocketreel', ['ionic', 'pocketreel.controllers', 'pocketreel.ser
       }
     }
   })
+
+  .state('tab.account', {
+    url: '/account',
+    views: {
+      'tab-account': {
+        templateUrl: 'templates/tab-account.html',
+        controller: 'AccountCtrl'
+      }
+    }
+  });
+
 
   // starter biolerplate
   /*
@@ -118,6 +153,6 @@ angular.module('pocketreel', ['ionic', 'pocketreel.controllers', 'pocketreel.ser
   // started biolerplate
 
   // if none of the above states are matched, use this as the fallback
-  $urlRouterProvider.otherwise('/tab/dash');
+  $urlRouterProvider.otherwise('/auth/signin');
 
 });

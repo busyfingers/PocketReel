@@ -1,6 +1,18 @@
 var imdb = require('imdb-api');
 
-angular.module('pocketreel.controllers', [])
+angular.module('pocketreel.controllers', ['ionic.cloud'])
+
+.controller('SignInCtrl', function($scope, $ionicAuth, $ionicUser, $state) {
+
+  $scope.validateUser = function() {
+    $state.go('tab.dash');
+  };
+  
+})
+
+.controller('SignUpCtrl', function($scope, $ionicAuth, $ionicUser) {
+
+})
 
 .controller('DashCtrl', ['$scope', 'RecentActivity', function($scope, RecentActivity) {
   $scope.dummyData = RecentActivity.getDummyRecentActivity();
@@ -100,4 +112,10 @@ angular.module('pocketreel.controllers', [])
 .controller('MyBadgesCtrl', ['$scope', function($scope) {
  
 
-}]);
+}])
+
+.controller('AccountCtrl', function($state, $scope) {
+  $scope.logout = function() {
+    $state.go('auth.signin');
+  };
+});

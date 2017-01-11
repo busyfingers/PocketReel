@@ -2371,7 +2371,7 @@ module.exports = BufferList
  * 
  */
 /**
- * bluebird build version 3.4.6
+ * bluebird build version 3.4.7
  * Features enabled: core, race, call_get, generators, map, nodeify, promisify, props, reduce, settle, some, using, timers, filter, any, each
 */
 !function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.Promise=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof _dereq_=="function"&&_dereq_;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof _dereq_=="function"&&_dereq_;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
@@ -2525,11 +2525,6 @@ if (!util.hasDevTools) {
         }
     };
 }
-
-Async.prototype.invokeFirst = function (fn, receiver, arg) {
-    this._normalQueue.unshift(fn, receiver, arg);
-    this._queueTick();
-};
 
 Async.prototype._drainQueue = function(queue) {
     while (queue.length() > 0) {
@@ -3310,6 +3305,7 @@ Promise.config = function(opts) {
             Promise.prototype._fireEvent = defaultFireEvent;
         }
     }
+    return Promise;
 };
 
 function defaultFireEvent() { return false; }
@@ -3580,7 +3576,7 @@ function stackFramesAsArray(error) {
             break;
         }
     }
-    if (i > 0) {
+    if (i > 0 && error.name != "SyntaxError") {
         stack = stack.slice(i);
     }
     return stack;
@@ -3593,7 +3589,7 @@ function parseStackAndMessage(error) {
                 ? stackFramesAsArray(error) : ["    (No stack trace)"];
     return {
         message: message,
-        stack: cleanStack(stack)
+        stack: error.name == "SyntaxError" ? stack : cleanStack(stack)
     };
 }
 
@@ -5811,7 +5807,7 @@ _dereq_("./synchronous_inspection")(Promise);
 _dereq_("./join")(
     Promise, PromiseArray, tryConvertToPromise, INTERNAL, async, getDomain);
 Promise.Promise = Promise;
-Promise.version = "3.4.6";
+Promise.version = "3.4.7";
 _dereq_('./map.js')(Promise, PromiseArray, apiRejection, tryConvertToPromise, INTERNAL, debug);
 _dereq_('./call_get.js')(Promise);
 _dereq_('./using.js')(Promise, apiRejection, tryConvertToPromise, createContext, INTERNAL, debug);
@@ -6499,23 +6495,6 @@ Queue.prototype._pushOne = function (arg) {
     var i = (this._front + length) & (this._capacity - 1);
     this[i] = arg;
     this._length = length + 1;
-};
-
-Queue.prototype._unshiftOne = function(value) {
-    var capacity = this._capacity;
-    this._checkCapacity(this.length() + 1);
-    var front = this._front;
-    var i = (((( front - 1 ) &
-                    ( capacity - 1) ) ^ capacity ) - capacity );
-    this[i] = value;
-    this._front = i;
-    this._length = this.length() + 1;
-};
-
-Queue.prototype.unshift = function(fn, receiver, arg) {
-    this._unshiftOne(arg);
-    this._unshiftOne(receiver);
-    this._unshiftOne(fn);
 };
 
 Queue.prototype.push = function (fn, receiver, arg) {
@@ -7878,8 +7857,11 @@ if (typeof Symbol !== "undefined" && Symbol.iterator) {
 var isNode = typeof process !== "undefined" &&
         classString(process).toLowerCase() === "[object process]";
 
-function env(key, def) {
-    return isNode ? process.env[key] : def;
+var hasEnvVariables = typeof process !== "undefined" &&
+    typeof process.env !== "undefined";
+
+function env(key) {
+    return hasEnvVariables ? process.env[key] : undefined;
 }
 
 function getNativePromise() {
@@ -7927,6 +7909,7 @@ var ret = {
     hasDevTools: typeof chrome !== "undefined" && chrome &&
                  typeof chrome.loadTimes === "function",
     isNode: isNode,
+    hasEnvVariables: hasEnvVariables,
     env: env,
     global: globalObject,
     getNativePromise: getNativePromise,
@@ -41502,14 +41485,37 @@ angular.module('pocketreel', ['ionic', 'pocketreel.controllers', 'pocketreel.ser
   // Each state's controller can be found in controllers.js
   $stateProvider
 
-  // setup an abstract state for the tabs directive
-    .state('tab', {
+  // Authentication views
+  .state('auth', {
+        url: "/auth",
+        abstract: true,
+        templateUrl: "templates/auth.html"
+    })
+    .state('auth.signin', {
+        url: '/signin',
+        views: {
+            'auth-signin': {
+                templateUrl: 'templates/auth-signin.html',
+                controller: 'SignInCtrl'
+            }
+        }
+    })
+    .state('auth.signup', {
+        url: '/signup',
+        views: {
+            'auth-signup': {
+                templateUrl: 'templates/auth-signup.html',
+                controller: 'SignUpCtrl'
+            }
+        }
+    })
+
+  // App views/tabs
+  .state('tab', {
     url: '/tab',
     abstract: true,
     templateUrl: './templates/tabs.html'
   })
-
-  // Each tab has its own nav history stack:
 
   .state('tab.dash', {
     url: '/dash',
@@ -41538,6 +41544,7 @@ angular.module('pocketreel', ['ionic', 'pocketreel.controllers', 'pocketreel.ser
       }
     }
   })
+
   .state('tab.myCheckIns', {
     url: '/myCheckIns',
     cache: false,
@@ -41557,6 +41564,17 @@ angular.module('pocketreel', ['ionic', 'pocketreel.controllers', 'pocketreel.ser
       }
     }
   })
+
+  .state('tab.account', {
+    url: '/account',
+    views: {
+      'tab-account': {
+        templateUrl: 'templates/tab-account.html',
+        controller: 'AccountCtrl'
+      }
+    }
+  });
+
 
   // starter biolerplate
   /*
@@ -41592,14 +41610,26 @@ angular.module('pocketreel', ['ionic', 'pocketreel.controllers', 'pocketreel.ser
   // started biolerplate
 
   // if none of the above states are matched, use this as the fallback
-  $urlRouterProvider.otherwise('/tab/dash');
+  $urlRouterProvider.otherwise('/auth/signin');
 
 });
 
 },{"./controllers":152,"./services":153}],152:[function(require,module,exports){
 var imdb = require('imdb-api');
 
-angular.module('pocketreel.controllers', [])
+angular.module('pocketreel.controllers', ['ionic.cloud'])
+
+.controller('SignInCtrl', function($scope, $ionicAuth, $ionicUser, $state) {
+
+  $scope.validateUser = function() {
+    $state.go('tab.dash');
+  };
+  
+})
+
+.controller('SignUpCtrl', function($scope, $ionicAuth, $ionicUser) {
+
+})
 
 .controller('DashCtrl', ['$scope', 'RecentActivity', function($scope, RecentActivity) {
   $scope.dummyData = RecentActivity.getDummyRecentActivity();
@@ -41699,7 +41729,13 @@ angular.module('pocketreel.controllers', [])
 .controller('MyBadgesCtrl', ['$scope', function($scope) {
  
 
-}]);
+}])
+
+.controller('AccountCtrl', function($state, $scope) {
+  $scope.logout = function() {
+    $state.go('auth.signin');
+  };
+});
 
 },{"imdb-api":53}],153:[function(require,module,exports){
 angular.module('pocketreel.services', [])
