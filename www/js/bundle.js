@@ -41459,7 +41459,7 @@ function extend() {
 require('./controllers');
 require('./services');
 
-angular.module('pocketreel', ['ionic', 'pocketreel.controllers', 'pocketreel.services'])
+angular.module('pocketreel', ['ionic', 'ionic.cloud', 'pocketreel.controllers', 'pocketreel.services'])
 
 .run(function($ionicPlatform) {
   $ionicPlatform.ready(function() {
@@ -41477,7 +41477,13 @@ angular.module('pocketreel', ['ionic', 'pocketreel.controllers', 'pocketreel.ser
   });
 })
 
-.config(function($stateProvider, $urlRouterProvider) {
+.config(function($stateProvider, $urlRouterProvider, $ionicCloudProvider) {
+
+  $ionicCloudProvider.init({
+    "core": {
+      "app_id": "5ed34377"
+    }
+  });
 
   // Ionic uses AngularUI Router which uses the concept of states
   // Learn more here: https://github.com/angular-ui/ui-router
@@ -41619,16 +41625,65 @@ var imdb = require('imdb-api');
 
 angular.module('pocketreel.controllers', ['ionic.cloud'])
 
-.controller('SignInCtrl', function($scope, $ionicAuth, $ionicUser, $state) {
+.controller('SignInCtrl', function($scope, $ionicAuth, $ionicUser, $state, UtilService, $ionicPopup) {
 
-  $scope.validateUser = function() {
+  if ($ionicAuth.isAuthenticated()) {
     $state.go('tab.dash');
+  }
+
+  $scope.validateUser = function(userCredentials) {
+    var details = {'email': userCredentials.mail, 'password': userCredentials.password};
+
+    $ionicAuth.login('basic', details).then(function() {
+      $state.go('tab.dash');
+    }).catch(function(err) {
+      var popupOptions;
+
+      if (err.status === 401)
+        popupOptions = UtilService.getSimplePopupOptObj("Invalid login credentials", "Sign in error");
+      else
+        popupOptions = UtilService.getSimplePopupOptObj("Error code: " + err.status + "\nMessage: " + err.message, "Sign in error");
+       
+      $ionicPopup.alert(popupOptions);
+    });
   };
   
 })
 
-.controller('SignUpCtrl', function($scope, $ionicAuth, $ionicUser) {
+.controller('SignUpCtrl', function($scope, $state, $ionicAuth, $ionicUser, $ionicPopup, UtilService) {
 
+  $scope.signup = function(newUserCredentials) {
+
+    if (!newUserCredentials || !newUserCredentials.mail || !newUserCredentials.password) {
+      var popupOptions = UtilService.getSimplePopupOptObj("You need to fill in both e-mail and password", "Signup error");
+      $ionicPopup.alert(popupOptions);
+    } else {
+    
+    var details = {'email': newUserCredentials.mail, 'password': newUserCredentials.password};
+    var popupOptions;
+
+    $ionicAuth.signup(details).then(function() {
+      popupOptions = UtilService.getSimplePopupOptObj("You can now login using your credentials.", "Signup successful");
+      $ionicPopup.alert(popupOptions).then(function() {
+        $state.go('auth.signin');
+      });
+    }, function(err) {
+      
+      for (var e of err.details) {
+          if (e === 'conflict_email') {
+            popupOptions = UtilService.getSimplePopupOptObj("Email already exists.", "Signup error");
+          } else if (e === 'invalid_email') {
+            popupOptions = UtilService.getSimplePopupOptObj("Invalid e-mail.", "Signup error");
+          } else {
+            // TODO: add cases for other error messages
+            // https://docs.ionic.io/services/auth/
+            popupOptions = UtilService.getSimplePopupOptObj(e, "Signup error");
+          }
+          $ionicPopup.alert(popupOptions);
+      }
+    });
+   };
+  };
 })
 
 .controller('DashCtrl', ['$scope', 'RecentActivity', function($scope, RecentActivity) {
@@ -41731,8 +41786,9 @@ angular.module('pocketreel.controllers', ['ionic.cloud'])
 
 }])
 
-.controller('AccountCtrl', function($state, $scope) {
+.controller('AccountCtrl', function($state, $scope, $ionicAuth) {
   $scope.logout = function() {
+    $ionicAuth.logout();
     $state.go('auth.signin');
   };
 });

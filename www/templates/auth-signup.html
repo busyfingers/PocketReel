@@ -1,21 +1,25 @@
 <ion-view view-title="Sign up" hide-nav-bar="true">
 
     <ion-content class="padding">
+    
     <div class="list">
         <label class="item item-input">
-            <span class="input-label">Username</span>
-            <input type="text" ng-model="user.email">
+            <span class="input-label">E-mail</span>
+            <input type="text" ng-model="newUserCredentials.mail">
         </label>
+        
         <label class="item item-input">
             <span class="input-label">Password</span>
-            <input type="password" ng-model="user.password">
+            <input type="password" ng-model="newUserCredentials.password">
         </label>
         <label class="item item-input">
-            <button class="button button-block button-calm" ng-click="createUser()">
+            <button class="button button-block button-calm" ng-click="signup(newUserCredentials)">
             Register
         </button>
         </label>
     </div>
+    
+
     </ion-content>
 
 </ion-view>

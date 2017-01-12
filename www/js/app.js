@@ -2,7 +2,7 @@
 require('./controllers');
 require('./services');
 
-angular.module('pocketreel', ['ionic', 'pocketreel.controllers', 'pocketreel.services'])
+angular.module('pocketreel', ['ionic', 'ionic.cloud', 'pocketreel.controllers', 'pocketreel.services'])
 
 .run(function($ionicPlatform) {
   $ionicPlatform.ready(function() {
@@ -20,7 +20,13 @@ angular.module('pocketreel', ['ionic', 'pocketreel.controllers', 'pocketreel.ser
   });
 })
 
-.config(function($stateProvider, $urlRouterProvider) {
+.config(function($stateProvider, $urlRouterProvider, $ionicCloudProvider) {
+
+  $ionicCloudProvider.init({
+    "core": {
+      "app_id": "5ed34377"
+    }
+  });
 
   // Ionic uses AngularUI Router which uses the concept of states
   // Learn more here: https://github.com/angular-ui/ui-router
