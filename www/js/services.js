@@ -1,24 +1,44 @@
 angular.module('pocketreel.services', [])
 
-.factory('DataService', function($window) {
+.factory('DataService', ['$window', '$ionicUser', 'UtilService', '$ionicDB',
+function($window, $ionicUser, UtilService, $ionicDB) {
 
   //$window.localStorage.removeItem("CHECKED_IN_TITLES")
 
   var saveCheckIn = function(itemToCheckIn) {
-    var checkedInItems = JSON.parse($window.localStorage.getItem("CHECKED_IN_TITLES")) || JSON.parse("{}");
+    var checkedInItems = $ionicUser.get("CHECKED_IN_TITLES", {});
+    //var checkedInItems = JSON.parse($window.localStorage.getItem("CHECKED_IN_TITLES")) || JSON.parse("{}");
     checkedInItems[itemToCheckIn.imdbid] = itemToCheckIn;
-    $window.localStorage.setItem("CHECKED_IN_TITLES", JSON.stringify(checkedInItems));
+    $ionicUser.set("CHECKED_IN_TITLES", checkedInItems);
+    //$window.localStorage.setItem("CHECKED_IN_TITLES", JSON.stringify(checkedInItems));
+    $ionicUser.save();
   };
 
   var getCheckedInItems = function() { // TODO: take param for user
-    return JSON.parse($window.localStorage.getItem("CHECKED_IN_TITLES")) || JSON.parse("{}");
+    return $ionicUser.get("CHECKED_IN_TITLES", {});
+    //return JSON.parse($window.localStorage.getItem("CHECKED_IN_TITLES")) || JSON.parse("{}");
+  };
+
+  var saveToStream = function(itemToCheckIn) {
+    console.log("saveToStream...")
+    $ionicDB.connect();
+    var streamPosts = $ionicDB.collection('stream');
+    streamPosts.store(itemToCheckIn).subscribe(
+      function(id) {
+        console.log("id value:", id)
+        $ionicDB.disconnect();
+      },
+      function(err) { console.error(err) }
+    );
+    //$ionicDB.disconnect();
   };
 
   return {
     saveCheckIn: saveCheckIn,
-    getCheckedInItems: getCheckedInItems
+    getCheckedInItems: getCheckedInItems,
+    saveToStream: saveToStream
   };
-})
+}])
 
 .factory('UtilService', function ($ionicLoading) {
     /**

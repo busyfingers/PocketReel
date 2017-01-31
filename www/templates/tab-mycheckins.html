@@ -3,7 +3,7 @@
 
 		<h4>Check-ins</h4>
 
-		<div ng-if="showPlaceHolder()">
+		<div ng-if="myCheckedInItems.length < 1">
 			<p>No check-ins yet!</p>
 		</div>
 
@@ -13,18 +13,6 @@
             <h2>{{ item.title }}</h2>
             <p>Rated {{ item.userScore }} at {{ item.time }}</p>
             </div>
-            <!--
-			<div class="list card">
-                <a href="#" class="item">
-				<div class="item item-text-wrap">
-					{{ item.title }}
-				</div>
-                </a>
-				<div class="item item-text-wrap">
-					Rated {{ item.userScore }} at {{ item.time }}
-				</div>
-			</div>
-            -->
 		</ul>
 		<br>
 		<ul>

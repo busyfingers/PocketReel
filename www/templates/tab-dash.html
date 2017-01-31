@@ -1,17 +1,43 @@
 <ion-view view-title="Pocket Reel">
   <ion-content class="padding">
+
+    <ion-refresher
+      pulling-text="Pull to refresh..."
+      on-refresh="updateStream()">
+    </ion-refresher>
+
     <h4>Recent activity</h4>
+
+    <div ng-if="streamUpdates.length < 1" style="padding-top: 50%">
+      <center><p>No recent activities to show. Be the first to check in a movie!</p></center><br>
+    </div>
+
     <ul>
-      <li ng-repeat="item in dummyData | limitTo:5">
-        <div class="card">
-          <div class="item item-divider">
-            {{ item.date }}
+      <!--       <li ng-repeat="item in streamUpdates | orderBy: '-time' | limitTo:5">  -->
+      <li ng-repeat="item in streamUpdates">
+        <div class="list card">
+
+          <div class="item item-avatar item-divider">
+            <img src="img/user_default.png">
+            <h2>{{ item.user }}</h2>
+            <p>{{ item.time }}</p>
           </div>
-          <div class="item item-text-wrap">
-            {{ item.user }} watched {{ item.title }}
+
+          <div class="item item-body">
+            <img class="full-image" src="{{ item.poster }}">
+            <h1>{{ item.title }}</h1>
+            <h3>{{ item.userScore }} of 100</h3>
+            <!--
+            <p>
+              <a href="#/tab/dash" class="subdued">1 Like</a>
+              <a href="#/tab/dash" class="subdued">5 Comments</a>
+            </p>
+            -->
           </div>
+
         </div>
       </li>
     </ul>
+
   </ion-content>
 </ion-view>
