@@ -41573,6 +41573,7 @@ angular.module('pocketreel', ['ionic', 'ionic.cloud', 'pocketreel.controllers', 
 
   .state('tab.account', {
     url: '/account',
+    cache: false,
     views: {
       'tab-account': {
         templateUrl: 'templates/tab-account.html',
@@ -41580,40 +41581,6 @@ angular.module('pocketreel', ['ionic', 'ionic.cloud', 'pocketreel.controllers', 
       }
     }
   });
-
-
-  // starter biolerplate
-  /*
-  .state('tab.chats', {
-      url: '/chats',
-      views: {
-        'tab-chats': {
-          templateUrl: 'templates/tab-chats.html',
-          controller: 'ChatsCtrl'
-        }
-      }
-    })
-    .state('tab.chat-detail', {
-      url: '/chats/:chatId',
-      views: {
-        'tab-chats': {
-          templateUrl: 'templates/chat-detail.html',
-          controller: 'ChatDetailCtrl'
-        }
-      }
-    })
-
-  .state('tab.account', {
-    url: '/account',
-    views: {
-      'tab-account': {
-        templateUrl: 'templates/tab-account.html',
-        controller: 'AccountCtrl'
-      }
-    }
-  });
-  */
-  // started biolerplate
 
   // if none of the above states are matched, use this as the fallback
   $urlRouterProvider.otherwise('/auth/signin');
@@ -41625,10 +41592,11 @@ var imdb = require('imdb-api');
 
 angular.module('pocketreel.controllers', [])
 
-	.controller('SignInCtrl', ['$scope', '$ionicAuth', '$ionicUser', '$state', 'UtilService', '$ionicPopup',
-		function ($scope, $ionicAuth, $ionicUser, $state, UtilService, $ionicPopup) {
+	.controller('SignInCtrl', ['$scope', '$ionicAuth', '$ionicUser', '$state', 'UtilService', '$ionicPopup', 'DataService',
+		function ($scope, $ionicAuth, $ionicUser, $state, UtilService, $ionicPopup, DataService) {
 
 			if ($ionicAuth.isAuthenticated()) {
+				DataService.updateUsrImage($ionicAuth.userService.user.id, $ionicUser.details.image);
 				$state.go('tab.dash');
 			}
 
@@ -41656,6 +41624,8 @@ angular.module('pocketreel.controllers', [])
 	.controller('SignUpCtrl', ['$scope', '$state', '$ionicAuth', '$ionicUser', '$ionicPopup', 'UtilService',
 		function ($scope, $state, $ionicAuth, $ionicUser, $ionicPopup, UtilService) {
 
+			$scope.newUserCredentials = {};
+
 			$scope.signup = function (newUserCredentials) {
 
 				if (!newUserCredentials || !newUserCredentials.mail || !newUserCredentials.password || !newUserCredentials.username) {
@@ -41669,8 +41639,9 @@ angular.module('pocketreel.controllers', [])
 					$ionicAuth.signup(details).then(function () {
 						popupOptions = UtilService.getSimplePopupOptObj("You can now login using your credentials.", "Signup successful");
 						$ionicPopup.alert(popupOptions).then(function () {
-							//$scope.newUserCredentials.mail = "";
-							//$scope.newUserCredentials.password = "";        
+							$scope.newUserCredentials.username = "";
+							$scope.newUserCredentials.mail = "";
+							$scope.newUserCredentials.password = "";        
 							$state.go('auth.signin');
 						});
 					}, function (err) {
@@ -41692,9 +41663,9 @@ angular.module('pocketreel.controllers', [])
 			};
 		}])
 
-	// injecting $ionicDB doesnt work...
-	.controller('DashCtrl', ['$scope', 'RecentActivity', '$ionicDB', '$ionicPopup',
-		function ($scope, RecentActivity, $ionicDB, $ionicPopup) {
+	.controller('DashCtrl', ['$scope', 'DataService', '$ionicDB', '$ionicPopup', '$ionicUser',
+		function ($scope, DataService, $ionicDB, $ionicPopup, $ionicUser) {
+
 			$scope.updateStream = function () {
 				$ionicDB.connect();
 				var streamPosts = $ionicDB.collection('stream');
@@ -41702,7 +41673,7 @@ angular.module('pocketreel.controllers', [])
 				streamPosts.order("time", "descending").limit(10).fetch().subscribe(
 					function(result) {
 						result.forEach(function(element) {
-						messageList.push(element);
+							messageList.push(element);
 						});
 						$scope.streamUpdates = messageList
 					},
@@ -41719,6 +41690,7 @@ angular.module('pocketreel.controllers', [])
 			};
 
 			$scope.updateStream();
+			
 		}])
 
 	.controller('CheckInCtrl', ['$rootScope', '$scope', 'UtilService', '$ionicPopup', function ($rootScope, $scope, UtilService, $ionicPopup) {
@@ -41765,8 +41737,8 @@ angular.module('pocketreel.controllers', [])
 
 	}])
 
-	.controller('CheckInDetailCtrl', ['$scope', '$rootScope', '$stateParams', '$ionicPopup', 'UtilService', 'DataService', '$state', '$ionicHistory', '$ionicUser',
-		function ($scope, $rootScope, $stateParams, $ionicPopup, UtilService, DataService, $state, $ionicHistory, $ionicUser) {
+	.controller('CheckInDetailCtrl', ['$scope', '$rootScope', '$stateParams', '$ionicPopup', 'UtilService', 'DataService', '$state', '$ionicHistory', '$ionicUser', '$ionicAuth',
+		function ($scope, $rootScope, $stateParams, $ionicPopup, UtilService, DataService, $state, $ionicHistory, $ionicUser, $ionicAuth) {
 			$scope.userScore = 50;
 			for (index in $rootScope.searchResults) {
 				if ($rootScope.searchResults[index].imdbid === $stateParams.checkInTitleId)
@@ -41782,11 +41754,12 @@ angular.module('pocketreel.controllers', [])
 					"imdburl": $scope.titleInfo.imdburl,
 					"userScore": userScore,
 					"time": UtilService.getDateString(),
-					"user": $ionicUser.details.username
+					"user": $ionicUser.details.username,
+					"userimage": $ionicUser.details.image
 				};
 
 				DataService.saveCheckIn(itemToCheckIn);
-				DataService.saveToStream(itemToCheckIn);
+				DataService.saveToStream(itemToCheckIn, $ionicUser.id);
 
 				// .then(function () {
 				var msg = `You gave title ${$scope.titleInfo.title} a score of ${userScore}`;
@@ -41818,177 +41791,152 @@ angular.module('pocketreel.controllers', [])
 
 	.controller('MyBadgesCtrl', ['$scope', function ($scope) {
 
-
 	}])
 
-	.controller('AccountCtrl', ['$state', '$scope', '$ionicAuth', function ($state, $scope, $ionicAuth) {
+	.controller('AccountCtrl', ['$state', '$scope', '$ionicAuth', '$ionicUser', 'DataService',
+	 function ($state, $scope, $ionicAuth, $ionicUser, DataService) {
+
+		$scope.accountinfo = {};
+		$scope.accountinfo.usrImageUrl = $ionicUser.details.image;
+		$scope.accountinfo.username = $ionicUser.details.username;
+		$scope.accountinfo.name = $ionicUser.details.name;
+		$scope.accountinfo.numCheckIns = Object.keys(DataService.getCheckedInItems()).length;
+		
 		$scope.logout = function () {
 			$ionicAuth.logout();
 			$state.go('auth.signin');
 		};
+
 	}]);
 
 },{"imdb-api":53}],153:[function(require,module,exports){
 angular.module('pocketreel.services', [])
 
-.factory('DataService', ['$window', '$ionicUser', 'UtilService', '$ionicDB',
-function($window, $ionicUser, UtilService, $ionicDB) {
+	.factory('DataService', ['$window', '$ionicUser', 'UtilService', '$ionicDB',
+		function ($window, $ionicUser, UtilService, $ionicDB) {
+			var saveCheckIn = function (itemToCheckIn) {
+				var checkedInItems = $ionicUser.get("CHECKED_IN_TITLES", {});
+				checkedInItems[itemToCheckIn.imdbid] = itemToCheckIn;
+				$ionicUser.set("CHECKED_IN_TITLES", checkedInItems);
+				$ionicUser.save();
+			};
 
-  //$window.localStorage.removeItem("CHECKED_IN_TITLES")
+			var getCheckedInItems = function () {
+				return $ionicUser.get("CHECKED_IN_TITLES", {});
+			};
 
-  var saveCheckIn = function(itemToCheckIn) {
-    var checkedInItems = $ionicUser.get("CHECKED_IN_TITLES", {});
-    //var checkedInItems = JSON.parse($window.localStorage.getItem("CHECKED_IN_TITLES")) || JSON.parse("{}");
-    checkedInItems[itemToCheckIn.imdbid] = itemToCheckIn;
-    $ionicUser.set("CHECKED_IN_TITLES", checkedInItems);
-    //$window.localStorage.setItem("CHECKED_IN_TITLES", JSON.stringify(checkedInItems));
-    $ionicUser.save();
-  };
+			var saveToStream = function (itemToCheckIn, userid) {
+				itemToCheckIn.userid = userid;
+				$ionicDB.connect();
+				var streamPosts = $ionicDB.collection('stream');
+				streamPosts.store(itemToCheckIn).subscribe(
+					function (id) {
+						$ionicDB.disconnect();
+					},
+					function (err) { console.error(err) }
+				);
+			};
 
-  var getCheckedInItems = function() { // TODO: take param for user
-    return $ionicUser.get("CHECKED_IN_TITLES", {});
-    //return JSON.parse($window.localStorage.getItem("CHECKED_IN_TITLES")) || JSON.parse("{}");
-  };
+			var updateUsrImage = function (userid, imageUrl) {
+				$ionicDB.connect();
+				var userdata = $ionicDB.collection('users');
+				userdata.update({
+					id: userid,
+					imageurl: imageUrl
+				});
+			};
 
-  var saveToStream = function(itemToCheckIn) {
-    console.log("saveToStream...")
-    $ionicDB.connect();
-    var streamPosts = $ionicDB.collection('stream');
-    streamPosts.store(itemToCheckIn).subscribe(
-      function(id) {
-        console.log("id value:", id)
-        $ionicDB.disconnect();
-      },
-      function(err) { console.error(err) }
-    );
-    //$ionicDB.disconnect();
-  };
+			// TODO: do this when updating the stream (and dont store the user image url in the stream database)
+			var getUsrImage = function (userid) {
+				var imageUrl = "";
+				$ionicDB.connect();
+				var userdata = $ionicDB.collection('users');
+				userdata.find(userid).fetch().subscribe(
+					function (result) {
 
-  return {
-    saveCheckIn: saveCheckIn,
-    getCheckedInItems: getCheckedInItems,
-    saveToStream: saveToStream
-  };
-}])
+							console.log("result:", result)
+							//imageUrl = result.imageurl;
 
-.factory('UtilService', function ($ionicLoading) {
-    /**
-   * @function displayLoading
-   * @memberOf pocketreel.services.UtilService
-   * @description Displays a loading animation.
-   */
-  var displayLoading = function () {
-      $ionicLoading.show({
-          animation: 'fade-in',
-          showBackdrop: true,
-          maxWidth: 200,
-          showDelay: 0
-      });
-  };
+						if (result != null) {
+							imageUrl = result.imageurl;
+						}
+				
+					},
+					function (err) {
+						console.error(err)
+					},
+					function () {
+						$ionicDB.disconnect();
+						return imageUrl;
+					}
+				);
+			};
 
-  /**
-   * @function hideLoading
-   * @memberOf pocketreel.services.UtilService
-   * @description Hides a loading animation currently showing.
-   */
-  var hideLoading = function () {
-      $ionicLoading.hide();
-  };
+			return {
+				saveCheckIn: saveCheckIn,
+				getCheckedInItems: getCheckedInItems,
+				saveToStream: saveToStream,
+				updateUsrImage: updateUsrImage,
+				getUsrImage: getUsrImage
+			};
+		}])
 
-  /**
-   * @function getSimplePopupOptObj
-   * @memberOf pocketreel.services.UtilService
-   * @param {string} _template - The message to be displayed
-   * @param {string} _title - The popup box title
-   * @description Returns an object that can be used as input to $ionicPopup.alert
-   */
-  var getSimplePopupOptObj = function (_template, _title) {
-      return {
-          template: _template,
-          title: _title,
-          buttons: [
-              { text: "OK", type: "button-positive" }
-          ]
-      };
-  };
+	.factory('UtilService', function ($ionicLoading) {
+		/**
+	   * @function displayLoading
+	   * @memberOf pocketreel.services.UtilService
+	   * @description Displays a loading animation.
+	   */
+		var displayLoading = function () {
+			$ionicLoading.show({
+				animation: 'fade-in',
+				showBackdrop: true,
+				maxWidth: 200,
+				showDelay: 0
+			});
+		};
 
-  var getDateString = function() {
-    var d = new Date();
-    var time = d.getTime()-d.getTimezoneOffset()*60000; // offset in minutes, convert to milliseconds
-    var datestr = new Date(time).toISOString().replace(/T/, ' ').replace(/Z/, '');
-    return datestr;
-  }
+		/**
+		 * @function hideLoading
+		 * @memberOf pocketreel.services.UtilService
+		 * @description Hides a loading animation currently showing.
+		 */
+		var hideLoading = function () {
+			$ionicLoading.hide();
+		};
 
-  return {
-    displayLoading: displayLoading,
-    hideLoading: hideLoading,
-    getSimplePopupOptObj: getSimplePopupOptObj,
-    getDateString: getDateString
-  }
+		/**
+		 * @function getSimplePopupOptObj
+		 * @memberOf pocketreel.services.UtilService
+		 * @param {string} _template - The message to be displayed
+		 * @param {string} _title - The popup box title
+		 * @description Returns an object that can be used as input to $ionicPopup.alert
+		 */
+		var getSimplePopupOptObj = function (_template, _title) {
+			return {
+				template: _template,
+				title: _title,
+				buttons: [
+					{ text: "OK", type: "button-positive" }
+				]
+			};
+		};
 
-})
+		var getDateString = function () {
+			var d = new Date();
+			var time = d.getTime() - d.getTimezoneOffset() * 60000; // offset in minutes, convert to milliseconds
+			var datestr = new Date(time).toISOString().replace(/T/, ' ').replace(/Z/, '');
+			return datestr;
+		}
 
-.factory('RecentActivity', [function () {
+		return {
+			displayLoading: displayLoading,
+			hideLoading: hideLoading,
+			getSimplePopupOptObj: getSimplePopupOptObj,
+			getDateString: getDateString
+		}
 
-  var dummyData = [{
-      id: 0,
-      date: "2015-03-25 12:00:00",
-      title: "Shawshank Redemption",
-      user: "Bob"
-    }, {
-      id: 1,
-      date: "2015-03-24 19:03:54",
-      title: "The Matrix",
-      user: "Anna"
-    }, {
-      id: 2,
-      date: "2015-03-24 18:54:10",
-      title: "Toy Story 2",
-      user: "Bob"
-    }, {
-      id: 3,
-      date: "2015-03-23 11:00:00",
-      title: "The Lord of the Rings",
-      user: "Jim"
-    }, {
-      id: 4,
-      date: "2015-03-22 23:15:11",
-      title: "The Blind Side",
-      user: "Jim"
-    }, {
-      id: 5,
-      date: "2015-03-22 22:43:34",
-      title: "Ted",
-      user: "Anna"
-    }, {
-      id: 6,
-      date: "2015-03-22 21:27:28",
-      title: "Sponge Bob Square Pants",
-      user: "Bob"
-    }, {
-      id: 7,
-      date: "2015-03-22 20:57:44",
-      title: "Full Metal Jacket",
-      user: "Jim"
-    }, {
-      id: 8,
-      date: "2015-03-22 19:41:05",
-      title: "Prometheus",
-      user: "Anna"
-    }, {
-      id: 9,
-      date: "2015-03-21 16:14:53",
-      title: "Die Hard",
-      user: "Jim"
-    }];
-
-  return {
-    getDummyRecentActivity: function() {
-      return dummyData;
-    }
-  }
-
-}]);
+	});
 
 },{}],154:[function(require,module,exports){
 

@@ -6,7 +6,17 @@
 				Enable Friends
 			</ion-toggle>
 			-->
+			
+			<ion-item class="item item-text-wrap item-thumbnail-left">
+				<img src="{{ accountinfo.usrImageUrl }}"></img>
+				<h2>{{ accountinfo.username }}</h2>
+				<p>Number of check-ins: {{ accountinfo.numCheckIns }}</p>
+				<!--
+				<button class="button button-small">Change image</button>
+				-->
 
+			</ion-item>
+			
 			<ion-item class="center"><button class="button button-assertive" ng-click="logout()">Log out</button></ion-item>
 			
 		</ion-list>

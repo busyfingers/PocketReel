@@ -116,6 +116,7 @@ angular.module('pocketreel', ['ionic', 'ionic.cloud', 'pocketreel.controllers', 
 
   .state('tab.account', {
     url: '/account',
+    cache: false,
     views: {
       'tab-account': {
         templateUrl: 'templates/tab-account.html',
@@ -123,40 +124,6 @@ angular.module('pocketreel', ['ionic', 'ionic.cloud', 'pocketreel.controllers', 
       }
     }
   });
-
-
-  // starter biolerplate
-  /*
-  .state('tab.chats', {
-      url: '/chats',
-      views: {
-        'tab-chats': {
-          templateUrl: 'templates/tab-chats.html',
-          controller: 'ChatsCtrl'
-        }
-      }
-    })
-    .state('tab.chat-detail', {
-      url: '/chats/:chatId',
-      views: {
-        'tab-chats': {
-          templateUrl: 'templates/chat-detail.html',
-          controller: 'ChatDetailCtrl'
-        }
-      }
-    })
-
-  .state('tab.account', {
-    url: '/account',
-    views: {
-      'tab-account': {
-        templateUrl: 'templates/tab-account.html',
-        controller: 'AccountCtrl'
-      }
-    }
-  });
-  */
-  // started biolerplate
 
   // if none of the above states are matched, use this as the fallback
   $urlRouterProvider.otherwise('/auth/signin');

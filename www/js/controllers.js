@@ -2,10 +2,11 @@ var imdb = require('imdb-api');
 
 angular.module('pocketreel.controllers', [])
 
-	.controller('SignInCtrl', ['$scope', '$ionicAuth', '$ionicUser', '$state', 'UtilService', '$ionicPopup',
-		function ($scope, $ionicAuth, $ionicUser, $state, UtilService, $ionicPopup) {
+	.controller('SignInCtrl', ['$scope', '$ionicAuth', '$ionicUser', '$state', 'UtilService', '$ionicPopup', 'DataService',
+		function ($scope, $ionicAuth, $ionicUser, $state, UtilService, $ionicPopup, DataService) {
 
 			if ($ionicAuth.isAuthenticated()) {
+				DataService.updateUsrImage($ionicAuth.userService.user.id, $ionicUser.details.image);
 				$state.go('tab.dash');
 			}
 
@@ -33,6 +34,8 @@ angular.module('pocketreel.controllers', [])
 	.controller('SignUpCtrl', ['$scope', '$state', '$ionicAuth', '$ionicUser', '$ionicPopup', 'UtilService',
 		function ($scope, $state, $ionicAuth, $ionicUser, $ionicPopup, UtilService) {
 
+			$scope.newUserCredentials = {};
+
 			$scope.signup = function (newUserCredentials) {
 
 				if (!newUserCredentials || !newUserCredentials.mail || !newUserCredentials.password || !newUserCredentials.username) {
@@ -46,8 +49,9 @@ angular.module('pocketreel.controllers', [])
 					$ionicAuth.signup(details).then(function () {
 						popupOptions = UtilService.getSimplePopupOptObj("You can now login using your credentials.", "Signup successful");
 						$ionicPopup.alert(popupOptions).then(function () {
-							//$scope.newUserCredentials.mail = "";
-							//$scope.newUserCredentials.password = "";        
+							$scope.newUserCredentials.username = "";
+							$scope.newUserCredentials.mail = "";
+							$scope.newUserCredentials.password = "";        
 							$state.go('auth.signin');
 						});
 					}, function (err) {
@@ -69,8 +73,9 @@ angular.module('pocketreel.controllers', [])
 			};
 		}])
 
-	.controller('DashCtrl', ['$scope', 'RecentActivity', '$ionicDB', '$ionicPopup',
-		function ($scope, RecentActivity, $ionicDB, $ionicPopup) {
+	.controller('DashCtrl', ['$scope', 'DataService', '$ionicDB', '$ionicPopup', '$ionicUser',
+		function ($scope, DataService, $ionicDB, $ionicPopup, $ionicUser) {
+
 			$scope.updateStream = function () {
 				$ionicDB.connect();
 				var streamPosts = $ionicDB.collection('stream');
@@ -78,7 +83,7 @@ angular.module('pocketreel.controllers', [])
 				streamPosts.order("time", "descending").limit(10).fetch().subscribe(
 					function(result) {
 						result.forEach(function(element) {
-						messageList.push(element);
+							messageList.push(element);
 						});
 						$scope.streamUpdates = messageList
 					},
@@ -95,6 +100,7 @@ angular.module('pocketreel.controllers', [])
 			};
 
 			$scope.updateStream();
+			
 		}])
 
 	.controller('CheckInCtrl', ['$rootScope', '$scope', 'UtilService', '$ionicPopup', function ($rootScope, $scope, UtilService, $ionicPopup) {
@@ -141,8 +147,8 @@ angular.module('pocketreel.controllers', [])
 
 	}])
 
-	.controller('CheckInDetailCtrl', ['$scope', '$rootScope', '$stateParams', '$ionicPopup', 'UtilService', 'DataService', '$state', '$ionicHistory', '$ionicUser',
-		function ($scope, $rootScope, $stateParams, $ionicPopup, UtilService, DataService, $state, $ionicHistory, $ionicUser) {
+	.controller('CheckInDetailCtrl', ['$scope', '$rootScope', '$stateParams', '$ionicPopup', 'UtilService', 'DataService', '$state', '$ionicHistory', '$ionicUser', '$ionicAuth',
+		function ($scope, $rootScope, $stateParams, $ionicPopup, UtilService, DataService, $state, $ionicHistory, $ionicUser, $ionicAuth) {
 			$scope.userScore = 50;
 			for (index in $rootScope.searchResults) {
 				if ($rootScope.searchResults[index].imdbid === $stateParams.checkInTitleId)
@@ -158,11 +164,12 @@ angular.module('pocketreel.controllers', [])
 					"imdburl": $scope.titleInfo.imdburl,
 					"userScore": userScore,
 					"time": UtilService.getDateString(),
-					"user": $ionicUser.details.username
+					"user": $ionicUser.details.username,
+					"userimage": $ionicUser.details.image
 				};
 
 				DataService.saveCheckIn(itemToCheckIn);
-				DataService.saveToStream(itemToCheckIn);
+				DataService.saveToStream(itemToCheckIn, $ionicUser.id);
 
 				// .then(function () {
 				var msg = `You gave title ${$scope.titleInfo.title} a score of ${userScore}`;
@@ -194,12 +201,20 @@ angular.module('pocketreel.controllers', [])
 
 	.controller('MyBadgesCtrl', ['$scope', function ($scope) {
 
-
 	}])
 
-	.controller('AccountCtrl', ['$state', '$scope', '$ionicAuth', function ($state, $scope, $ionicAuth) {
+	.controller('AccountCtrl', ['$state', '$scope', '$ionicAuth', '$ionicUser', 'DataService',
+	 function ($state, $scope, $ionicAuth, $ionicUser, DataService) {
+
+		$scope.accountinfo = {};
+		$scope.accountinfo.usrImageUrl = $ionicUser.details.image;
+		$scope.accountinfo.username = $ionicUser.details.username;
+		$scope.accountinfo.name = $ionicUser.details.name;
+		$scope.accountinfo.numCheckIns = Object.keys(DataService.getCheckedInItems()).length;
+		
 		$scope.logout = function () {
 			$ionicAuth.logout();
 			$state.go('auth.signin');
 		};
+
 	}]);
