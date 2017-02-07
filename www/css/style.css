@@ -1,1 +1,3 @@
-/* Empty. Add your own CSS if you like */
+.popup-notitle .popup-head {
+  display: none;
+}

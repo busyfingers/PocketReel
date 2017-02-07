@@ -2,11 +2,26 @@ angular.module('pocketreel.services', [])
 
 	.factory('DataService', ['$window', '$ionicUser', 'UtilService', '$ionicDB',
 		function ($window, $ionicUser, UtilService, $ionicDB) {
-			var saveCheckIn = function (itemToCheckIn) {
+
+			var clearData = function() { // dev only
+				$ionicUser.set("CHECKED_IN_TITLES", {});
+				$ionicUser.set("BADGES", []);
+				$ionicUser.save();
+			};
+
+			var saveCheckIn = function (itemToCheckIn, badgePopupCallback) {
 				var checkedInItems = $ionicUser.get("CHECKED_IN_TITLES", {});
+				var numBeforeCheckIn = Object.keys(checkedInItems).length
 				checkedInItems[itemToCheckIn.imdbid] = itemToCheckIn;
+				var numAfterCheckIn = Object.keys(checkedInItems).length
 				$ionicUser.set("CHECKED_IN_TITLES", checkedInItems);
 				$ionicUser.save();
+
+				if (numBeforeCheckIn !== numAfterCheckIn) { // if same number, an update was made
+					badgePopupCallback(checkBadges(checkedInItems));
+				} else {
+					badgePopupCallback(null);
+				}
 			};
 
 			var getCheckedInItems = function () {
@@ -60,16 +75,52 @@ angular.module('pocketreel.services', [])
 				);
 			};
 
+		var updateBadges = function(checkInList) {
+			// Get checkIns from database/$ionicUser.get()
+			// Call checkBadges()
+		};
+
+		var checkBadges = function(itemList) {
+
+			// TODO: get criteria for badges from the database, probably
+
+			var popupContent = "";
+			var badgeInfo = "";
+			var numberOfCheckIns = Object.keys(itemList).length
+
+			if (numberOfCheckIns === 1) {
+				badgeInfo = {"name": "First check in!"};
+				popupContent = '<img src="img/number-one-badge.png" style="width: 100%">' +
+				'<p>You just made your first check-in, congratulations!</p>';
+			}
+
+			// More criteria here...
+
+			var badges = $ionicUser.get("BADGES", []);
+			badges.push(badgeInfo);
+			$ionicUser.set("BADGES", badges);
+			$ionicUser.save();
+			
+			return popupContent;
+		};
+
+		var getBadges = function() {
+			return $ionicUser.get("BADGES", []);
+		};
+
 			return {
 				saveCheckIn: saveCheckIn,
 				getCheckedInItems: getCheckedInItems,
 				saveToStream: saveToStream,
 				updateUsrImage: updateUsrImage,
-				getUsrImage: getUsrImage
+				getUsrImage: getUsrImage,
+				clearData: clearData,
+				checkBadges: checkBadges,
+				getBadges: getBadges
 			};
 		}])
 
-	.factory('UtilService', function ($ionicLoading) {
+	.factory('UtilService', ['$ionicLoading', function ($ionicLoading) {
 		/**
 	   * @function displayLoading
 	   * @memberOf pocketreel.services.UtilService
@@ -115,7 +166,7 @@ angular.module('pocketreel.services', [])
 			var time = d.getTime() - d.getTimezoneOffset() * 60000; // offset in minutes, convert to milliseconds
 			var datestr = new Date(time).toISOString().replace(/T/, ' ').replace(/Z/, '');
 			return datestr;
-		}
+		};
 
 		return {
 			displayLoading: displayLoading,
@@ -124,4 +175,4 @@ angular.module('pocketreel.services', [])
 			getDateString: getDateString
 		}
 
-	});
+	}]);

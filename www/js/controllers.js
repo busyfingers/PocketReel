@@ -100,6 +100,8 @@ angular.module('pocketreel.controllers', [])
 			};
 
 			$scope.updateStream();
+
+			//DataService.clearData();
 			
 		}])
 
@@ -126,6 +128,18 @@ angular.module('pocketreel.controllers', [])
 				}
 
 			}).catch(function (err) {
+				// -- For testing while in browser since omdb doesnt allow cors --
+				/*
+				UtilService.hideLoading();
+				var data = { imdbid: "t8u12ndi21e", title:"RoboCop",_year_data:"2014",Rated:"PG-13",Released:"12 Feb 2014",runtime:"117 min",genres:"Action, Crime, Sci-Fi","Director":"José Padilha",Writer:"Joshua Zetumer, Edward Neumeier, Michael Miner, Edward Neumeier, Michael Miner",Actors:"Joel Kinnaman, Gary Oldman, Michael Keaton, Abbie Cornish",plot:"In 2028 Detroit, when Alex Murphy - a loving husband, father and good cop - is critically injured in the line of duty, the multinational conglomerate OmniCorp sees their chance for a part-man, part-robot police officer.",Language:"English, Persian, Ukrainian",Country:"USA",Awards:"4 wins & 1 nomination.",poster:"https://images-na.ssl-images-amazon.com/images/M/MV5BMjAyOTUzMTcxN15BMl5BanBnXkFtZTgwMjkyOTc1MDE@._V1_SX300.jpg",Metascore:"52",rated:"6.2",imdbVotes:"187,953",imdbID:"tt1234721",Type:"movie",Response:"True"};
+
+				$scope.resultType = data.constructor.name
+				$rootScope.searchResults = [data];
+
+				return;
+				*/
+				// -- Temporary for testing while imdb API is faulty --
+
 				var popupOptions = "";
 				if (err.constructor.name === "ImdbError") {
 					popupOptions = UtilService.getSimplePopupOptObj("Try again later", "IMDb API error");
@@ -156,7 +170,7 @@ angular.module('pocketreel.controllers', [])
 			}
 
 			$scope.confirmCheckIn = function (userScore) {
-
+				
 				var itemToCheckIn = {
 					"imdbid": $scope.titleInfo.imdbid,
 					"title": $scope.titleInfo.title,
@@ -168,9 +182,36 @@ angular.module('pocketreel.controllers', [])
 					"userimage": $ionicUser.details.image
 				};
 
-				DataService.saveCheckIn(itemToCheckIn);
+				DataService.saveCheckIn(itemToCheckIn, function(popupContent) {
+					var popupOptions;
+					if (popupContent) {
+						popupOptions = UtilService.getSimplePopupOptObj(popupContent, "Badge unlocked!");
+						/*
+						popupOptions = {
+							//cssClass: "popup-notitle",
+							template: '<h3>Badge unlocked!</h3>' + popupContent,
+							scope: $scope,
+							buttons: [
+								{ text: "OK", type: "button-positive" }
+							]
+						};
+						*/
+					} else {
+						var msg = `You gave title ${$scope.titleInfo.title} a score of ${userScore}`;
+						popupOptions = UtilService.getSimplePopupOptObj(msg, "Check-in complete!");
+					}
+
+					$rootScope.searchResults = [];
+					$rootScope.searchResultDetails = [];
+					$ionicHistory.goBack();
+					$ionicPopup.alert(popupOptions).then(function () {
+						$state.go('tab.myCheckIns');
+					});				
+
+				});
 				DataService.saveToStream(itemToCheckIn, $ionicUser.id);
 
+				/*
 				// .then(function () {
 				var msg = `You gave title ${$scope.titleInfo.title} a score of ${userScore}`;
 				var popupOptions = UtilService.getSimplePopupOptObj(msg, "Check-in complete!");
@@ -181,6 +222,7 @@ angular.module('pocketreel.controllers', [])
 					$state.go('tab.myCheckIns');
 				});
 				//});
+				*/
 
 			};
 
@@ -199,12 +241,12 @@ angular.module('pocketreel.controllers', [])
 
 	}])
 
-	.controller('MyBadgesCtrl', ['$scope', function ($scope) {
-
+	.controller('MyBadgesCtrl', ['$scope', 'DataService', function ($scope, DataService) {
+		$scope.myBadges = DataService.getBadges();
 	}])
 
-	.controller('AccountCtrl', ['$state', '$scope', '$ionicAuth', '$ionicUser', 'DataService',
-	 function ($state, $scope, $ionicAuth, $ionicUser, DataService) {
+	.controller('AccountCtrl', ['$state', '$scope', '$ionicAuth', '$ionicUser', 'DataService', '$ionicPopup',
+	 function ($state, $scope, $ionicAuth, $ionicUser, DataService, $ionicPopup) {
 
 		$scope.accountinfo = {};
 		$scope.accountinfo.usrImageUrl = $ionicUser.details.image;

@@ -13134,12 +13134,13 @@ exports.Movie = Movie;
 var TVShow = (function (_super) {
     __extends(TVShow, _super);
     function TVShow(object) {
-        _super.call(this, object);
-        this._episodes = [];
-        var years = this["_year_data"].split("-");
-        this.start_year = parseInt(years[0]) ? parseInt(years[0]) : null;
-        this.end_year = parseInt(years[1]) ? parseInt(years[1]) : null;
-        this.totalseasons = parseInt(this["totalseasons"]);
+        var _this = _super.call(this, object) || this;
+        _this._episodes = [];
+        var years = _this["_year_data"].split("-");
+        _this.start_year = parseInt(years[0]) ? parseInt(years[0]) : null;
+        _this.end_year = parseInt(years[1]) ? parseInt(years[1]) : null;
+        _this.totalseasons = parseInt(_this["totalseasons"]);
+        return _this;
     }
     TVShow.prototype.episodes = function (cb) {
         if (this._episodes.length !== 0) {
@@ -13176,7 +13177,7 @@ var TVShow = (function (_super) {
             return Promise.resolve(eps);
         });
         if (cb) {
-            prom.catch(function (err) {
+            prom["catch"](function (err) {
                 return cb(err, undefined);
             });
         }
@@ -13208,7 +13209,13 @@ function getReq(req, cb) {
     var prom = rp({ "qs": qs, url: omdbapi, json: true }).then(function (data) {
         var ret;
         if (interfaces_1.isError(data)) {
-            return cb(new ImdbError(data.Error + ": " + (req.name ? req.name : req.id), req), undefined);
+            var err = new ImdbError(data.Error + ": " + (req.name ? req.name : req.id), req);
+            if (cb) {
+                return cb(err, undefined);
+            }
+            else {
+                return Promise.reject(err);
+            }
         }
         else {
             if (interfaces_1.isMovie(data)) {
@@ -13216,6 +13223,9 @@ function getReq(req, cb) {
             }
             else if (interfaces_1.isTvshow(data)) {
                 ret = new TVShow(data);
+            }
+            else if (interfaces_1.isEpisode(data)) {
+                ret = new Episode(data, 30);
             }
             else {
                 var err = new ImdbError("type: " + data.Type + " not valid", req);
@@ -13233,7 +13243,7 @@ function getReq(req, cb) {
         }
     });
     if (cb) {
-        prom.catch(function (err) {
+        prom["catch"](function (err) {
             cb(err, undefined);
         });
     }
@@ -13246,7 +13256,6 @@ function get(name, cb) {
     return getReq({ id: undefined, name: name }, cb);
 }
 exports.get = get;
-;
 function getById(imdbid, cb) {
     return getReq({ id: imdbid, name: undefined }, cb);
 }
@@ -13266,6 +13275,10 @@ function isMovie(response) {
     return response.Type === "movie";
 }
 exports.isMovie = isMovie;
+function isEpisode(response) {
+    return response.Type === "episode";
+}
+exports.isEpisode = isEpisode;
 
 },{}],55:[function(require,module,exports){
 "use strict";
@@ -41461,131 +41474,136 @@ require('./services');
 
 angular.module('pocketreel', ['ionic', 'ionic.cloud', 'pocketreel.controllers', 'pocketreel.services'])
 
-.run(function($ionicPlatform) {
-  $ionicPlatform.ready(function() {
-    // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
-    // for form inputs)
-    if (window.cordova && window.cordova.plugins && window.cordova.plugins.Keyboard) {
-      cordova.plugins.Keyboard.hideKeyboardAccessoryBar(true);
-      cordova.plugins.Keyboard.disableScroll(true);
+	.run(function ($ionicPlatform) {
+		$ionicPlatform.ready(function () {
+			// Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
+			// for form inputs)
+			if (window.cordova && window.cordova.plugins && window.cordova.plugins.Keyboard) {
+				cordova.plugins.Keyboard.hideKeyboardAccessoryBar(true);
+				cordova.plugins.Keyboard.disableScroll(true);
 
-    }
-    if (window.StatusBar) {
-      // org.apache.cordova.statusbar required
-      StatusBar.styleDefault();
-    }
-  });
-})
+			}
+			if (window.StatusBar) {
+				// org.apache.cordova.statusbar required
+				StatusBar.styleDefault();
+			}
+		});
+	})
 
-.config(function($stateProvider, $urlRouterProvider, $ionicCloudProvider) {
+	.config(function ($stateProvider, $urlRouterProvider, $ionicCloudProvider, $httpProvider) {
 
-  $ionicCloudProvider.init({
-    "core": {
-      "app_id": "5ed34377"
-    }
-  });
+		$httpProvider.defaults.headers.common = {};
+		$httpProvider.defaults.headers.post = {};
+		$httpProvider.defaults.headers.put = {};
+		$httpProvider.defaults.headers.patch = {};
 
-  // Ionic uses AngularUI Router which uses the concept of states
-  // Learn more here: https://github.com/angular-ui/ui-router
-  // Set up the various states which the app can be in.
-  // Each state's controller can be found in controllers.js
-  $stateProvider
+		$ionicCloudProvider.init({
+			"core": {
+				"app_id": "5ed34377"
+			}
+		});
 
-  // Authentication views
-  .state('auth', {
-        url: "/auth",
-        abstract: true,
-        templateUrl: "templates/auth.html"
-    })
-    .state('auth.signin', {
-        url: '/signin',
-        views: {
-            'auth-signin': {
-                templateUrl: 'templates/auth-signin.html',
-                controller: 'SignInCtrl'
-            }
-        }
-    })
-    .state('auth.signup', {
-        url: '/signup',
-        views: {
-            'auth-signup': {
-                templateUrl: 'templates/auth-signup.html',
-                controller: 'SignUpCtrl'
-            }
-        }
-    })
+		// Ionic uses AngularUI Router which uses the concept of states
+		// Learn more here: https://github.com/angular-ui/ui-router
+		// Set up the various states which the app can be in.
+		// Each state's controller can be found in controllers.js
+		$stateProvider
 
-  // App views/tabs
-  .state('tab', {
-    url: '/tab',
-    abstract: true,
-    templateUrl: './templates/tabs.html'
-  })
+			// Authentication views
+			.state('auth', {
+				url: "/auth",
+				abstract: true,
+				templateUrl: "templates/auth.html"
+			})
+			.state('auth.signin', {
+				url: '/signin',
+				views: {
+					'auth-signin': {
+						templateUrl: 'templates/auth-signin.html',
+						controller: 'SignInCtrl'
+					}
+				}
+			})
+			.state('auth.signup', {
+				url: '/signup',
+				views: {
+					'auth-signup': {
+						templateUrl: 'templates/auth-signup.html',
+						controller: 'SignUpCtrl'
+					}
+				}
+			})
 
-  .state('tab.dash', {
-    url: '/dash',
-    views: {
-      'tab-dash': {
-        templateUrl: './templates/tab-dash.html',
-        controller: 'DashCtrl'
-      }
-    }
-  })
+			// App views/tabs
+			.state('tab', {
+				url: '/tab',
+				abstract: true,
+				templateUrl: './templates/tabs.html'
+			})
 
-  .state('tab.checkIn', {
-      url: '/checkIn',
-      views: {
-        'tab-checkIn': {
-          templateUrl: './templates/tab-checkIn.html',
-          controller: 'CheckInCtrl'
-        }
-      }
-  }).state('tab.checkIn-detail', {
-    url: '/checkIn/:checkInTitleId',
-    views: {
-      'tab-checkIn': {
-        templateUrl: './templates/checkIn-detail.html',
-        controller: 'CheckInDetailCtrl'
-      }
-    }
-  })
+			.state('tab.dash', {
+				url: '/dash',
+				views: {
+					'tab-dash': {
+						templateUrl: './templates/tab-dash.html',
+						controller: 'DashCtrl'
+					}
+				}
+			})
 
-  .state('tab.myCheckIns', {
-    url: '/myCheckIns',
-    cache: false,
-    views: {
-      'tab-myCheckIns': {
-        templateUrl: './templates/tab-myCheckIns.html',
-        controller: 'MyCheckInsCtrl'
-      }
-    }
-  }).state('tab.myBadges', {
-    url: '/myCheckIns/myBadges',
-    cache: false,
-    views: {
-      'tab-myCheckIns': {
-        templateUrl: './templates/tab-myBadges.html',
-        controller: 'MyBadgesCtrl'
-      }
-    }
-  })
+			.state('tab.checkIn', {
+				url: '/checkIn',
+				views: {
+					'tab-checkIn': {
+						templateUrl: './templates/tab-checkIn.html',
+						controller: 'CheckInCtrl'
+					}
+				}
+			}).state('tab.checkIn-detail', {
+				url: '/checkIn/:checkInTitleId',
+				views: {
+					'tab-checkIn': {
+						templateUrl: './templates/checkIn-detail.html',
+						controller: 'CheckInDetailCtrl'
+					}
+				}
+			})
 
-  .state('tab.account', {
-    url: '/account',
-    cache: false,
-    views: {
-      'tab-account': {
-        templateUrl: 'templates/tab-account.html',
-        controller: 'AccountCtrl'
-      }
-    }
-  });
+			.state('tab.myCheckIns', {
+				url: '/myCheckIns',
+				cache: false,
+				views: {
+					'tab-myCheckIns': {
+						templateUrl: './templates/tab-myCheckIns.html',
+						controller: 'MyCheckInsCtrl'
+					}
+				}
+			}).state('tab.myBadges', {
+				url: '/myCheckIns/myBadges',
+				cache: false,
+				views: {
+					'tab-myCheckIns': {
+						templateUrl: './templates/tab-myBadges.html',
+						controller: 'MyBadgesCtrl'
+					}
+				}
+			})
 
-  // if none of the above states are matched, use this as the fallback
-  $urlRouterProvider.otherwise('/auth/signin');
+			.state('tab.account', {
+				url: '/account',
+				cache: false,
+				views: {
+					'tab-account': {
+						templateUrl: 'templates/tab-account.html',
+						controller: 'AccountCtrl'
+					}
+				}
+			});
 
-});
+		// if none of the above states are matched, use this as the fallback
+		$urlRouterProvider.otherwise('/auth/signin');
+
+	});
 
 },{"./controllers":152,"./services":153}],152:[function(require,module,exports){
 var imdb = require('imdb-api');
@@ -41690,6 +41708,8 @@ angular.module('pocketreel.controllers', [])
 			};
 
 			$scope.updateStream();
+
+			//DataService.clearData();
 			
 		}])
 
@@ -41716,6 +41736,18 @@ angular.module('pocketreel.controllers', [])
 				}
 
 			}).catch(function (err) {
+				// -- For testing while in browser since omdb doesnt allow cors --
+				/*
+				UtilService.hideLoading();
+				var data = { imdbid: "t8u12ndi21e", title:"RoboCop",_year_data:"2014",Rated:"PG-13",Released:"12 Feb 2014",runtime:"117 min",genres:"Action, Crime, Sci-Fi","Director":"José Padilha",Writer:"Joshua Zetumer, Edward Neumeier, Michael Miner, Edward Neumeier, Michael Miner",Actors:"Joel Kinnaman, Gary Oldman, Michael Keaton, Abbie Cornish",plot:"In 2028 Detroit, when Alex Murphy - a loving husband, father and good cop - is critically injured in the line of duty, the multinational conglomerate OmniCorp sees their chance for a part-man, part-robot police officer.",Language:"English, Persian, Ukrainian",Country:"USA",Awards:"4 wins & 1 nomination.",poster:"https://images-na.ssl-images-amazon.com/images/M/MV5BMjAyOTUzMTcxN15BMl5BanBnXkFtZTgwMjkyOTc1MDE@._V1_SX300.jpg",Metascore:"52",rated:"6.2",imdbVotes:"187,953",imdbID:"tt1234721",Type:"movie",Response:"True"};
+
+				$scope.resultType = data.constructor.name
+				$rootScope.searchResults = [data];
+
+				return;
+				*/
+				// -- Temporary for testing while imdb API is faulty --
+
 				var popupOptions = "";
 				if (err.constructor.name === "ImdbError") {
 					popupOptions = UtilService.getSimplePopupOptObj("Try again later", "IMDb API error");
@@ -41746,7 +41778,7 @@ angular.module('pocketreel.controllers', [])
 			}
 
 			$scope.confirmCheckIn = function (userScore) {
-
+				
 				var itemToCheckIn = {
 					"imdbid": $scope.titleInfo.imdbid,
 					"title": $scope.titleInfo.title,
@@ -41758,9 +41790,36 @@ angular.module('pocketreel.controllers', [])
 					"userimage": $ionicUser.details.image
 				};
 
-				DataService.saveCheckIn(itemToCheckIn);
+				DataService.saveCheckIn(itemToCheckIn, function(popupContent) {
+					var popupOptions;
+					if (popupContent) {
+						popupOptions = UtilService.getSimplePopupOptObj(popupContent, "Badge unlocked!");
+						/*
+						popupOptions = {
+							//cssClass: "popup-notitle",
+							template: '<h3>Badge unlocked!</h3>' + popupContent,
+							scope: $scope,
+							buttons: [
+								{ text: "OK", type: "button-positive" }
+							]
+						};
+						*/
+					} else {
+						var msg = `You gave title ${$scope.titleInfo.title} a score of ${userScore}`;
+						popupOptions = UtilService.getSimplePopupOptObj(msg, "Check-in complete!");
+					}
+
+					$rootScope.searchResults = [];
+					$rootScope.searchResultDetails = [];
+					$ionicHistory.goBack();
+					$ionicPopup.alert(popupOptions).then(function () {
+						$state.go('tab.myCheckIns');
+					});				
+
+				});
 				DataService.saveToStream(itemToCheckIn, $ionicUser.id);
 
+				/*
 				// .then(function () {
 				var msg = `You gave title ${$scope.titleInfo.title} a score of ${userScore}`;
 				var popupOptions = UtilService.getSimplePopupOptObj(msg, "Check-in complete!");
@@ -41771,6 +41830,7 @@ angular.module('pocketreel.controllers', [])
 					$state.go('tab.myCheckIns');
 				});
 				//});
+				*/
 
 			};
 
@@ -41789,12 +41849,12 @@ angular.module('pocketreel.controllers', [])
 
 	}])
 
-	.controller('MyBadgesCtrl', ['$scope', function ($scope) {
-
+	.controller('MyBadgesCtrl', ['$scope', 'DataService', function ($scope, DataService) {
+		$scope.myBadges = DataService.getBadges();
 	}])
 
-	.controller('AccountCtrl', ['$state', '$scope', '$ionicAuth', '$ionicUser', 'DataService',
-	 function ($state, $scope, $ionicAuth, $ionicUser, DataService) {
+	.controller('AccountCtrl', ['$state', '$scope', '$ionicAuth', '$ionicUser', 'DataService', '$ionicPopup',
+	 function ($state, $scope, $ionicAuth, $ionicUser, DataService, $ionicPopup) {
 
 		$scope.accountinfo = {};
 		$scope.accountinfo.usrImageUrl = $ionicUser.details.image;
@@ -41814,11 +41874,26 @@ angular.module('pocketreel.services', [])
 
 	.factory('DataService', ['$window', '$ionicUser', 'UtilService', '$ionicDB',
 		function ($window, $ionicUser, UtilService, $ionicDB) {
-			var saveCheckIn = function (itemToCheckIn) {
+
+			var clearData = function() { // dev only
+				$ionicUser.set("CHECKED_IN_TITLES", {});
+				$ionicUser.set("BADGES", []);
+				$ionicUser.save();
+			};
+
+			var saveCheckIn = function (itemToCheckIn, badgePopupCallback) {
 				var checkedInItems = $ionicUser.get("CHECKED_IN_TITLES", {});
+				var numBeforeCheckIn = Object.keys(checkedInItems).length
 				checkedInItems[itemToCheckIn.imdbid] = itemToCheckIn;
+				var numAfterCheckIn = Object.keys(checkedInItems).length
 				$ionicUser.set("CHECKED_IN_TITLES", checkedInItems);
 				$ionicUser.save();
+
+				if (numBeforeCheckIn !== numAfterCheckIn) { // if same number, an update was made
+					badgePopupCallback(checkBadges(checkedInItems));
+				} else {
+					badgePopupCallback(null);
+				}
 			};
 
 			var getCheckedInItems = function () {
@@ -41872,16 +41947,52 @@ angular.module('pocketreel.services', [])
 				);
 			};
 
+		var updateBadges = function(checkInList) {
+			// Get checkIns from database/$ionicUser.get()
+			// Call checkBadges()
+		};
+
+		var checkBadges = function(itemList) {
+
+			// TODO: get criteria for badges from the database, probably
+
+			var popupContent = "";
+			var badgeInfo = "";
+			var numberOfCheckIns = Object.keys(itemList).length
+
+			if (numberOfCheckIns === 1) {
+				badgeInfo = {"name": "First check in!"};
+				popupContent = '<img src="img/number-one-badge.png" style="width: 100%">' +
+				'<p>You just made your first check-in, congratulations!</p>';
+			}
+
+			// More criteria here...
+
+			var badges = $ionicUser.get("BADGES", []);
+			badges.push(badgeInfo);
+			$ionicUser.set("BADGES", badges);
+			$ionicUser.save();
+			
+			return popupContent;
+		};
+
+		var getBadges = function() {
+			return $ionicUser.get("BADGES", []);
+		};
+
 			return {
 				saveCheckIn: saveCheckIn,
 				getCheckedInItems: getCheckedInItems,
 				saveToStream: saveToStream,
 				updateUsrImage: updateUsrImage,
-				getUsrImage: getUsrImage
+				getUsrImage: getUsrImage,
+				clearData: clearData,
+				checkBadges: checkBadges,
+				getBadges: getBadges
 			};
 		}])
 
-	.factory('UtilService', function ($ionicLoading) {
+	.factory('UtilService', ['$ionicLoading', function ($ionicLoading) {
 		/**
 	   * @function displayLoading
 	   * @memberOf pocketreel.services.UtilService
@@ -41927,7 +42038,7 @@ angular.module('pocketreel.services', [])
 			var time = d.getTime() - d.getTimezoneOffset() * 60000; // offset in minutes, convert to milliseconds
 			var datestr = new Date(time).toISOString().replace(/T/, ' ').replace(/Z/, '');
 			return datestr;
-		}
+		};
 
 		return {
 			displayLoading: displayLoading,
@@ -41936,7 +42047,7 @@ angular.module('pocketreel.services', [])
 			getDateString: getDateString
 		}
 
-	});
+	}]);
 
 },{}],154:[function(require,module,exports){
 

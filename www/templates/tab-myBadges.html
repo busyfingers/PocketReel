@@ -8,8 +8,12 @@
 		</div>
 
 		<ul>
-			<li>
-				
+			<li ng-repeat="badge in myBadges">
+				<div class="card">
+					<div class="item item-text-wrap">
+						{{ badge.name }}
+					</div>
+				</div>
 			</li>
 		</ul>
 	</ion-content>
