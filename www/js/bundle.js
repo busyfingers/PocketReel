@@ -41968,11 +41968,13 @@ angular.module('pocketreel.services', [])
 
 			// More criteria here...
 
-			var badges = $ionicUser.get("BADGES", []);
-			badges.push(badgeInfo);
-			$ionicUser.set("BADGES", badges);
-			$ionicUser.save();
-			
+			if (badgeInfo !== "") {
+				var badges = $ionicUser.get("BADGES", []);
+				badges.push(badgeInfo);
+				$ionicUser.set("BADGES", badges);
+				$ionicUser.save();
+			}
+		
 			return popupContent;
 		};
 
